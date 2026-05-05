@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Malvina Bazar — Sistema de Administración</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
@@ -1081,6 +1082,7 @@
       <div class="tabs" id="prov-tabs">
         <div class="tab active" onclick="provTab('deudas',this)">Deudas pendientes</div>
         <div class="tab" onclick="provTab('historial',this)">Historial de compras</div>
+        <div class="tab" onclick="provTab('pedidos',this)">📦 Pedidos de clientes</div>
         <div class="tab" onclick="provTab('config',this)">Configurar proveedores</div>
       </div>
 
@@ -1117,9 +1119,33 @@
                 <th class="num">A pagar</th>
                 <th>Estado</th>
                 <th>Notas</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="historial-tabla"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-pedidos">
+        <div class="flex-end mb-16">
+          <button class="btn btn-primary" onclick="openModal('modal-pedido')">+ Nuevo pedido</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Producto</th>
+                <th>Fecha pedido</th>
+                <th>Retira</th>
+                <th>Estado</th>
+                <th>Notas</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="pedidos-tabla"></tbody>
           </table>
         </div>
       </div>
@@ -1239,12 +1265,9 @@
 
     <!-- RECORDATORIOS -->
     <div class="page" id="page-recordatorios">
-      <div class="flex-between mb-20">
-        <div>
-          <div class="page-title">Recordatorios</div>
-          <div class="page-sub">Alertas activas del negocio</div>
-        </div>
-        <button class="btn btn-secondary" onclick="marcarTodasLeidas()">✓ Marcar todas como leídas</button>
+      <div class="mb-20">
+        <div class="page-title">Recordatorios</div>
+        <div class="page-sub">Gastos que vencen en los próximos 3 días. Desaparecen cuando los marcás como pagados en Gastos del mes.</div>
       </div>
       <div id="recordatorios-content"></div>
     </div>
@@ -1332,26 +1355,7 @@
           </div>
           <button class="btn btn-primary" onclick="saveConfig()">Guardar</button>
         </div>
-        <div class="card">
-          <div class="card-title">Objetivo BZ3 — Reintegro 10%</div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Configurá el período y monto para el seguimiento del reintegro.</div>
-          <div class="grid-3">
-            <div class="form-group">
-              <label class="form-label">Monto objetivo ($)</label>
-              <input type="number" class="form-input" id="conf-bz3-monto" placeholder="13000000">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Fecha desde</label>
-              <input type="date" class="form-input" id="conf-bz3-desde">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Fecha hasta</label>
-              <input type="date" class="form-input" id="conf-bz3-hasta">
-            </div>
-          </div>
-          <div id="conf-bz3-preview" style="font-size:13px;color:var(--text3);margin-bottom:12px"></div>
-          <button class="btn btn-primary" onclick="saveBZ3Config()">Guardar objetivo</button>
-        </div>
+
       </div>
     </div>
 
@@ -1717,6 +1721,55 @@
   </div>
 </div>
 
+<!-- Modal: Pedido cliente -->
+<div class="modal-overlay" id="modal-pedido">
+  <div class="modal" style="width:520px">
+    <div class="modal-title" id="modal-pedido-title">Nuevo pedido de cliente</div>
+    <input type="hidden" id="pedido-edit-id">
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Nombre del cliente</label>
+        <input type="text" class="form-input" id="pedido-cliente" placeholder="Ej: María González">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input type="text" class="form-input" id="pedido-telefono" placeholder="Ej: 11 2345-6789">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Producto / descripción del pedido</label>
+      <input type="text" class="form-input" id="pedido-producto" placeholder="Ej: Sartén Hudson 24cm azul">
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Fecha del pedido</label>
+        <input type="date" class="form-input" id="pedido-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha de retiro <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
+        <input type="date" class="form-input" id="pedido-retiro">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Estado</label>
+      <select class="form-select" id="pedido-estado">
+        <option value="pendiente">Pendiente — esperando el producto</option>
+        <option value="disponible">Disponible — listo para retirar</option>
+        <option value="entregado">Entregado — cliente retiró</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notas adicionales</label>
+      <input type="text" class="form-input" id="pedido-notas" placeholder="Opcional">
+    </div>
+    <div class="flex-end">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pedido');document.getElementById('pedido-edit-id').value=''">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePedido()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Nueva novedad -->
 <div class="modal-overlay" id="modal-novedad">
   <div class="modal" style="width:480px">
@@ -1829,7 +1882,8 @@ const DEFAULT_DATA = {
   gastosMes: {},
   devoluciones: [],
   novedades: [],
-  alertasLeidas: []
+  alertasLeidas: [],
+  pedidos: []
 };
 
 let DB = {};
@@ -1852,7 +1906,9 @@ async function loadDB() {
         if (!DB.devoluciones) DB.devoluciones = [];
         if (!DB.novedades) DB.novedades = [];
       if (!DB.alertasLeidas) DB.alertasLeidas = [];
+      if (!DB.pedidos) DB.pedidos = [];
         if (!DB.alertasLeidas) DB.alertasLeidas = [];
+        if (!DB.pedidos) DB.pedidos = [];
         if (!DB.catalogoGastos) DB.catalogoGastos = JSON.parse(JSON.stringify(DEFAULT_DATA.catalogoGastos));
         if (!DB.compras) DB.compras = [];
         if (!DB.movimientos) DB.movimientos = [];
@@ -2427,16 +2483,20 @@ function renderCaja() {
     const label = isEgreso ? m.concepto : isDevolucion ? m.concepto : (m.esCierre ? `Cierre — ${mp?.nombre||m.medio}` : (m.concepto || mp?.nombre || m.medio));
     const montoAbs = Math.abs(m.monto);
     const netoColor = isEgreso||isDevolucion ? 'var(--danger)' : 'var(--success)';
+    const notaLabel = m.nota ? `<div style="font-size:11px;color:var(--text3)">${m.nota}</div>` : '';
     return `<tr>
-      <td style="font-family:var(--mono);font-size:12px">${m.fecha}</td>
-      <td>${label}</td>
+      <td style="font-family:var(--mono);font-size:12px">${m.fecha}<div style="font-size:10px;color:var(--text3)">${m.hora||''}</div></td>
+      <td><div>${label}</div>${notaLabel}</td>
       <td><span class="badge ${tipoBadge}">${tipoLabel}</span></td>
       <td class="num">${fmtC(montoAbs)}</td>
       <td class="num" style="color:var(--warning)">${m.descCliente ? fmtC(m.descCliente) : '—'}</td>
       <td class="num" style="color:var(--danger)">${m.comision ? fmtC(m.comision) : '—'}</td>
       <td class="num" style="color:${netoColor}">${isEgreso||isDevolucion ? '−'+fmtC(montoAbs) : fmtC(m.neto||montoAbs)}</td>
       <td style="font-size:12px;color:var(--text3)">${m.usuario||''}</td>
-      <td><button class="action-btn danger" onclick="deleteMov('${m.id}')">✕</button></td>
+      <td><div class="row-actions">
+        ${!m.esCierre && !isDevolucion ? `<button class="action-btn" onclick="editMov('${m.id}')">✏️</button>` : ''}
+        <button class="action-btn danger" onclick="deleteMov('${m.id}')">✕</button>
+      </div></td>
     </tr>`;
   }).join('');
 }
@@ -2620,6 +2680,13 @@ function guardarVenta() {
         fecha, hora, usuario: currentUser?.nombre || ''
       });
     });
+  }
+
+  // Si es edición, eliminar el movimiento original
+  const editId = document.getElementById('venta-concepto')?.dataset?.editId;
+  if (editId) {
+    DB.movimientos = DB.movimientos.filter(m => m.id !== editId);
+    delete document.getElementById('venta-concepto').dataset.editId;
   }
 
   saveDB();
@@ -2839,6 +2906,28 @@ function deleteMov(id) {
   renderCaja();
   renderDashboard();
   renderResultado();
+}
+
+function editMov(id) {
+  const m = DB.movimientos.find(x => x.id === id);
+  if (!m) return;
+  // Switch to venta tab and pre-fill
+  const tabs = document.querySelectorAll('#caja-tabs .tab');
+  cajaTab('venta', tabs[0]);
+  setTimeout(() => {
+    if (document.getElementById('venta-concepto')) document.getElementById('venta-concepto').value = m.concepto || '';
+    if (document.getElementById('venta-nota')) document.getElementById('venta-nota').value = m.nota || '';
+    if (document.getElementById('venta-monto')) document.getElementById('venta-monto').value = m.monto || '';
+    if (document.getElementById('venta-medio')) document.getElementById('venta-medio').value = m.medio || 'efectivo';
+    // Set descuento ninguno (already applied in original)
+    const radioNinguno = document.querySelector('input[name="desc-tipo"][value="ninguno"]');
+    if (radioNinguno) radioNinguno.checked = true;
+    if (document.getElementById('desc-personalizado-wrap')) document.getElementById('desc-personalizado-wrap').style.display = 'none';
+    updateVentaPreview();
+    // Remove old movement when saving
+    document.getElementById('venta-concepto').dataset.editId = id;
+    alert('Editá los datos y guardá. La venta original se va a reemplazar.');
+  }, 100);
 }
 
 function cerrarCaja() {
@@ -3297,6 +3386,98 @@ function setMontoReal(mesKey, gastoId, val) { /* legacy compat */ }
 function deleteGasto(id) { deleteGastoMes(id); }
 
 // ============================================================
+// PEDIDOS DE CLIENTES
+// ============================================================
+function renderPedidos() {
+  if (!DB.pedidos) DB.pedidos = [];
+  const tbody = document.getElementById('pedidos-tabla');
+  if (!tbody) return;
+
+  const estadoColors = {
+    pendiente: 'badge-warn',
+    disponible: 'badge-info',
+    entregado: 'badge-ok',
+    cancelado: 'badge-danger'
+  };
+  const estadoLabels = {
+    pendiente: 'Pendiente',
+    disponible: 'Listo p/ retirar',
+    entregado: 'Entregado',
+    cancelado: 'Cancelado'
+  };
+
+  if (DB.pedidos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Sin pedidos registrados</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = [...DB.pedidos].sort((a,b) => (b.fecha||'').localeCompare(a.fecha||'')).map(p => `
+    <tr>
+      <td style="font-weight:500">${p.cliente||'—'}</td>
+      <td style="font-size:12px;color:var(--text2)">${p.telefono||'—'}</td>
+      <td>${p.producto||'—'}</td>
+      <td style="font-size:12px;font-family:var(--mono)">${p.fecha||'—'}</td>
+      <td style="font-size:12px;font-family:var(--mono);color:${p.retiro?'var(--info)':'var(--text3)'}">${p.retiro||'—'}</td>
+      <td><span class="badge ${estadoColors[p.estado]||'badge-gray'}">${estadoLabels[p.estado]||p.estado}</span></td>
+      <td style="font-size:12px;color:var(--text3);max-width:140px">${p.notas||'—'}</td>
+      <td><div class="row-actions">
+        <button class="action-btn" onclick="editPedido('${p.id}')">✏️</button>
+        <button class="action-btn danger" onclick="deletePedido('${p.id}')">✕</button>
+      </div></td>
+    </tr>
+  `).join('');
+}
+
+function savePedido() {
+  const editId = document.getElementById('pedido-edit-id').value;
+  const data = {
+    cliente: document.getElementById('pedido-cliente').value.trim(),
+    telefono: document.getElementById('pedido-telefono').value.trim(),
+    producto: document.getElementById('pedido-producto').value.trim(),
+    fecha: document.getElementById('pedido-fecha').value,
+    retiro: document.getElementById('pedido-retiro').value,
+    estado: document.getElementById('pedido-estado').value,
+    notas: document.getElementById('pedido-notas').value.trim()
+  };
+  if (!data.cliente || !data.producto) { alert('Ingresá el nombre del cliente y el producto'); return; }
+
+  if (!DB.pedidos) DB.pedidos = [];
+  if (editId) {
+    const idx = DB.pedidos.findIndex(p => p.id === editId);
+    if (idx >= 0) DB.pedidos[idx] = { ...DB.pedidos[idx], ...data };
+  } else {
+    DB.pedidos.push({ id: uid(), ...data, registradoPor: currentUser?.nombre || '' });
+  }
+  saveDB();
+  closeModal('modal-pedido');
+  document.getElementById('pedido-edit-id').value = '';
+  document.getElementById('modal-pedido-title').textContent = 'Nuevo pedido de cliente';
+  renderPedidos();
+}
+
+function editPedido(id) {
+  const p = DB.pedidos.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('pedido-edit-id').value = id;
+  document.getElementById('modal-pedido-title').textContent = 'Editar pedido';
+  document.getElementById('pedido-cliente').value = p.cliente || '';
+  document.getElementById('pedido-telefono').value = p.telefono || '';
+  document.getElementById('pedido-producto').value = p.producto || '';
+  document.getElementById('pedido-fecha').value = p.fecha || '';
+  document.getElementById('pedido-retiro').value = p.retiro || '';
+  document.getElementById('pedido-estado').value = p.estado || 'pendiente';
+  document.getElementById('pedido-notas').value = p.notas || '';
+  openModal('modal-pedido');
+}
+
+function deletePedido(id) {
+  if (!confirm('¿Eliminar este pedido?')) return;
+  DB.pedidos = DB.pedidos.filter(p => p.id !== id);
+  saveDB();
+  renderPedidos();
+}
+
+// ============================================================
 // PROVEEDORES
 // ============================================================
 function populateCompraProv() {
@@ -3361,6 +3542,7 @@ function renderProveedores() {
         <td class="num">${fmtC(c.aPagar||c.monto)}</td>
         <td><span class="badge ${c.pagado?'badge-ok':'badge-warn'}">${c.pagado?'Pagado':'Pendiente'}</span></td>
         <td style="font-size:12px;color:var(--text3)">${c.notas||'—'}</td>
+        <td><button class="action-btn danger" onclick="deleteCompra('${c.id}')">✕</button></td>
       </tr>`;
     }).join('');
 
@@ -3443,6 +3625,18 @@ function pagarCompra(id) {
   saveDB();
   renderProveedores();
   renderDashboard();
+}
+
+function deleteCompra(id) {
+  const c = DB.compras.find(x => x.id === id);
+  if (!c) return;
+  const prov = DB.proveedores.find(p => p.id === c.provId);
+  if (!confirm(`¿Eliminar esta compra de ${prov?.nombre||'proveedor'} por ${fmtC(c.monto)}?`)) return;
+  DB.compras = DB.compras.filter(x => x.id !== id);
+  saveDB();
+  renderProveedores();
+  renderDashboard();
+  renderResultado();
 }
 
 function editProv(id) {
@@ -3754,6 +3948,102 @@ function checkPrecio() {
 // ============================================================
 // NOVEDADES
 // ============================================================
+function buildNovCard(n, allNotes) {
+  const esPropia = n.usuario === currentUser?.nombre;
+  const yaLeida = (n.leidaPor||[]).includes(currentUser?.nombre);
+  const leidaLabel = n.leidaPor?.length > 0
+    ? n.leidaPor.map(u => `✓ ${u}`).join(' · ')
+    : (esPropia ? 'No leída aún' : '');
+  const replies = allNotes.filter(r => r.replyTo === n.id).sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
+  const isUnread = !esPropia && !yaLeida;
+
+  return `<div style="margin-bottom:12px">
+    <div style="background:${isUnread?'var(--surface3)':'var(--surface2)'};border:1px solid ${isUnread?'var(--accent)':'var(--border)'};border-radius:var(--radius-sm);padding:14px 16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-light);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent)">${n.usuario?.charAt(0)||'?'}</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text)">${n.usuario||'—'}</div>
+            <div style="font-size:11px;color:var(--text3)">${n.hora||''}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:${yaLeida||esPropia?'var(--text3)':'var(--warning)'}">
+            ${esPropia ? (n.leidaPor?.length>0 ? leidaLabel : '⏳ No leída') : (yaLeida ? '✓ Leída' : '● No leída')}
+          </span>
+          ${!esPropia && !yaLeida ? `<button class="action-btn" onclick="marcarNovLeida('${n.id}')">✓ Marcar leída</button>` : ''}
+          <button class="action-btn" onclick="toggleReplyBox('reply-box-${n.id}')">↩ Responder</button>
+          <button class="action-btn danger" onclick="deleteNovedad('${n.id}')">✕</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap">${n.texto}</div>
+
+      <!-- Reply input box (hidden by default) -->
+      <div id="reply-box-${n.id}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+        <textarea class="form-input" id="reply-text-${n.id}" rows="2" placeholder="Escribí tu respuesta..." style="resize:none;margin-bottom:6px;font-size:12px"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="toggleReplyBox('reply-box-${n.id}')">Cancelar</button>
+          <button class="btn btn-primary btn-sm" onclick="saveReply('${n.id}','${n.fecha}')">Enviar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Replies -->
+    ${replies.length > 0 ? `<div style="margin-left:20px;border-left:2px solid var(--border);padding-left:12px;margin-top:4px">
+      ${replies.map(r => {
+        const rEsPropia = r.usuario === currentUser?.nombre;
+        const rYaLeida = (r.leidaPor||[]).includes(currentUser?.nombre);
+        return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:22px;height:22px;border-radius:50%;background:var(--surface3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--text2)">${r.usuario?.charAt(0)||'?'}</div>
+              <span style="font-size:12px;font-weight:500">${r.usuario}</span>
+              <span style="font-size:11px;color:var(--text3)">${r.hora||''}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:11px;color:${rYaLeida||rEsPropia?'var(--text3)':'var(--warning)'}">
+                ${rEsPropia ? (r.leidaPor?.length>0?'✓ Leída':'⏳ No leída') : (rYaLeida?'✓ Leída':'● No leída')}
+              </span>
+              ${!rEsPropia && !rYaLeida ? `<button class="action-btn" onclick="marcarNovLeida('${r.id}')">✓</button>` : ''}
+              <button class="action-btn danger" onclick="deleteNovedad('${r.id}')">✕</button>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.5;white-space:pre-wrap">${r.texto}</div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+  </div>`;
+}
+
+function toggleReplyBox(id) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  if (box.style.display === 'block') {
+    const ta = box.querySelector('textarea');
+    if (ta) setTimeout(() => ta.focus(), 50);
+  }
+}
+
+function saveReply(parentId, fecha) {
+  const ta = document.getElementById('reply-text-' + parentId);
+  const texto = ta?.value?.trim();
+  if (!texto) { alert('Escribí algo'); return; }
+  if (!DB.novedades) DB.novedades = [];
+  DB.novedades.push({
+    id: uid(),
+    replyTo: parentId,
+    texto,
+    fecha,
+    hora: new Date().toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' }),
+    usuario: currentUser?.nombre || '—',
+    leidaPor: []
+  });
+  saveDB();
+  renderNovedades();
+  updateAlertBadge();
+}
+
 function renderNovedades() {
   if (!DB.novedades) DB.novedades = [];
   const selFecha = document.getElementById('novedades-fecha-sel');
@@ -3776,21 +4066,9 @@ function renderNovedades() {
         <div>Sin notas para este día</div>
       </div>`;
     } else {
-      lista.innerHTML = notasDia.map(n => `
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-light);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent)">${n.usuario?.charAt(0)||'?'}</div>
-              <div>
-                <div style="font-size:13px;font-weight:500;color:var(--text)">${n.usuario||'—'}</div>
-                <div style="font-size:11px;color:var(--text3)">${n.hora||''}</div>
-              </div>
-            </div>
-            <button class="action-btn danger" onclick="deleteNovedad('${n.id}')">✕</button>
-          </div>
-          <div style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap">${n.texto}</div>
-        </div>
-      `).join('');
+      // Only show root notes (no replies) at top level
+      const rootNotes = notasDia.filter(n => !n.replyTo);
+      lista.innerHTML = rootNotes.map(n => buildNovCard(n, notasDia)).join('');
     }
   }
 
@@ -3857,12 +4135,28 @@ function deleteNovedad(id) {
   renderRecordatorios();
 }
 
+function marcarNovLeida(id) {
+  const n = (DB.novedades||[]).find(x => x.id === id);
+  if (!n) return;
+  if (!n.leidaPor) n.leidaPor = [];
+  if (!n.leidaPor.includes(currentUser?.nombre)) {
+    n.leidaPor.push(currentUser?.nombre);
+  }
+  saveDB();
+  renderNovedades();
+  updateAlertBadge();
+}
+
 function checkNovedadesHoy() {
   if (!DB.novedades) return;
   const hoy = today();
   const notasHoy = DB.novedades.filter(n => n.fecha === hoy);
   // Solo mostrar las notas de otros usuarios
-  const notasDeOtros = notasHoy.filter(n => n.usuario !== currentUser?.nombre);
+  const notasDeOtros = (DB.novedades||[]).filter(n =>
+    n.usuario !== currentUser?.nombre &&
+    !(n.leidaPor||[]).includes(currentUser?.nombre) &&
+    (n.fecha === hoy || n.replyTo)
+  );
   if (notasDeOtros.length === 0) return;
 
   // Popup automático
@@ -3895,65 +4189,23 @@ function getAlertas() {
   const alertas = [];
   if (!DB.alertasLeidas) DB.alertasLeidas = [];
 
-  // Gastos por vencer
-  const mesKey = currentMesKey();
-  const gastosPend = (DB.gastosFijos||[]).filter(g => {
+  // Solo gastos que vencen en los próximos 3 días (no pagados)
+  (DB.gastosFijos||[]).filter(g => {
     if (g.fecha || !g.vto || g.cancelado) return false;
     const dias = Math.round((new Date(g.vto) - hoy) / 86400000);
-    return dias <= 7;
-  });
-  gastosPend.forEach(g => {
+    return dias <= 3;
+  }).forEach(g => {
     const dias = Math.round((new Date(g.vto) - hoy) / 86400000);
     const id = `gasto-${g.id}`;
+    if (DB.alertasLeidas.includes(id)) return; // no mostrar si ya leída
     alertas.push({
       id, tipo: 'gasto',
-      titulo: `Gasto por vencer: ${g.nombre}`,
+      titulo: `${g.nombre}`,
       desc: `Vence el ${g.vto} — ${fmtC(g.monto)}`,
-      urgencia: dias < 0 ? 'danger' : dias <= 3 ? 'danger' : 'warn',
-      leida: DB.alertasLeidas.includes(id)
+      urgencia: dias < 0 ? 'danger' : dias === 0 ? 'danger' : 'warn',
+      leida: false
     });
   });
-
-  // Deudas con proveedores vencidas o por vencer
-  (DB.compras||[]).filter(c => !c.pagado).forEach(c => {
-    const prov = (DB.proveedores||[]).find(p => p.id === c.provId);
-    const fp = c.fechaPago || c.fecha;
-    if (!fp) return;
-    const dias = Math.round((new Date(fp) - hoy) / 86400000);
-    if (dias > 14) return;
-    const id = `compra-${c.id}`;
-    alertas.push({
-      id, tipo: 'proveedor',
-      titulo: `Deuda con ${prov?.nombre||'proveedor'} por vencer`,
-      desc: `Pago: ${fp} — ${fmtC(c.monto)}`,
-      urgencia: dias < 0 ? 'danger' : dias <= 3 ? 'danger' : 'warn',
-      leida: DB.alertasLeidas.includes(id)
-    });
-  });
-
-  // Objetivo BZ3
-  const bz3cfg = DB.config?.objetivoBZ3;
-  const bz3Prov = (DB.proveedores||[]).find(p => p.nombre?.toUpperCase().includes('BZ3'));
-  if (bz3Prov && bz3cfg?.monto) {
-    const desde = bz3cfg.fechaDesde ? new Date(bz3cfg.fechaDesde) : (() => { const d = new Date(); d.setMonth(d.getMonth()-2); return d; })();
-    const hasta = bz3cfg.fechaHasta ? new Date(bz3cfg.fechaHasta) : new Date();
-    const total = (DB.compras||[]).filter(c => {
-      if (c.provId !== bz3Prov.id) return false;
-      const d = new Date(c.fecha||'');
-      return d >= desde && d <= hasta;
-    }).reduce((s,c) => s+c.monto, 0);
-    const falta = bz3cfg.monto - total;
-    if (falta > 0) {
-      const id = 'bz3-objetivo';
-      alertas.push({
-        id, tipo: 'objetivo',
-        titulo: `Objetivo BZ3 — Reintegro 10%`,
-        desc: `Llevás ${fmtC(total)} de ${fmtC(bz3cfg.monto)}. Te faltan ${fmtC(falta)}.`,
-        urgencia: 'info',
-        leida: DB.alertasLeidas.includes(id)
-      });
-    }
-  }
 
   return alertas;
 }
@@ -3965,22 +4217,12 @@ function renderRecordatorios() {
   if (!div) return;
 
   if (alertas.length === 0) {
-    div.innerHTML = '<div class="alert alert-ok">✅ Sin alertas pendientes. Todo en orden.</div>';
+    div.innerHTML = '<div class="alert alert-ok" style="margin-top:0">✅ Sin gastos por vencer en los próximos 3 días.</div>';
     return;
   }
 
-  const noLeidas = alertas.filter(a => !a.leida);
-  const leidas = alertas.filter(a => a.leida);
-
-  let html = '';
-  if (noLeidas.length > 0) {
-    html += `<div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px">${noLeidas.length} alerta${noLeidas.length>1?'s':''} sin leer</div>`;
-    noLeidas.forEach(a => { html += alertaCard(a); });
-  }
-  if (leidas.length > 0) {
-    html += `<div style="font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin:16px 0 10px">Leídas</div>`;
-    leidas.forEach(a => { html += alertaCard(a); });
-  }
+  let html = `<div style="font-size:12px;color:var(--text3);margin-bottom:14px">Gastos que vencen en los próximos 3 días y aún no están pagados:</div>`;
+  alertas.forEach(a => { html += alertaCard(a); });
   div.innerHTML = html;
 }
 
@@ -4029,11 +4271,14 @@ function updateAlertBadge() {
     badge.style.display = noLeidas > 0 ? 'inline-flex' : 'none';
   }
   // También novedades sin leer (de otros usuarios, de hoy)
-  const novHoy = (DB.novedades||[]).filter(n => n.fecha === today() && n.usuario !== currentUser?.nombre).length;
+  const novHoy = (DB.novedades||[]).filter(n => n.fecha === today() && n.usuario !== currentUser?.nombre && !(n.leidaPor||[]).includes(currentUser?.nombre)).length;
+  // Also count unread replies on own notes
+  const repliesUnread = (DB.novedades||[]).filter(n => n.replyTo && n.usuario !== currentUser?.nombre && !(n.leidaPor||[]).includes(currentUser?.nombre)).length;
   const novBadge = document.getElementById('nav-novedades-badge');
+  const totalNovUnread = novHoy + repliesUnread;
   if (novBadge) {
-    novBadge.textContent = novHoy;
-    novBadge.style.display = novHoy > 0 ? 'inline-flex' : 'none';
+    novBadge.textContent = totalNovUnread;
+    novBadge.style.display = totalNovUnread > 0 ? 'inline-flex' : 'none';
   }
 }
 
@@ -4091,10 +4336,14 @@ function renderConfig() {
   document.getElementById('medios-tabla').innerHTML = DB.mediosPago.map(mp => `
     <tr>
       <td style="font-weight:500">${mp.nombre}</td>
-      <td class="num" style="font-family:var(--mono)">${mp.comision}%</td>
+      <td class="num" style="font-family:var(--mono)">${Number(mp.comision).toFixed(2)}%</td>
       <td style="font-size:12px;color:var(--text3)">${mp.desc}</td>
-      <td>
-        <input type="number" step="0.01" style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:right" value="${mp.comision}" onchange="updateMedioComision('${mp.id}',this.value)">
+      <td style="display:flex;align-items:center;gap:8px">
+        <input type="number" step="0.01" min="0" max="100"
+          style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:right;background:var(--surface2);color:var(--text)"
+          value="${Number(mp.comision).toFixed(2)}"
+          onchange="updateMedioComision('${mp.id}',this.value)">
+        <span style="font-size:12px;color:var(--text3)">%</span>
       </td>
     </tr>
   `).join('');
@@ -4102,7 +4351,12 @@ function renderConfig() {
 
 function updateMedioComision(id, val) {
   const mp = DB.mediosPago.find(x => x.id === id);
-  if (mp) { mp.comision = parseFloat(val) || 0; saveDB(); }
+  if (mp) {
+    mp.comision = parseFloat(val) || 0;
+    saveDB();
+    // Re-render to confirm saved value
+    setTimeout(() => renderConfig(), 300);
+  }
 }
 
 function saveUsuario() {
@@ -4272,6 +4526,17 @@ function openModal(id) {
   if (id === 'modal-novedad') {
     document.getElementById('nov-fecha').value = today();
     document.getElementById('nov-texto').value = '';
+  }
+  if (id === 'modal-pedido') {
+    if (!document.getElementById('pedido-edit-id').value) {
+      document.getElementById('pedido-cliente').value = '';
+      document.getElementById('pedido-telefono').value = '';
+      document.getElementById('pedido-producto').value = '';
+      document.getElementById('pedido-fecha').value = today();
+      document.getElementById('pedido-retiro').value = '';
+      document.getElementById('pedido-estado').value = 'pendiente';
+      document.getElementById('pedido-notas').value = '';
+    }
   }
   if (id === 'modal-gasto') {
     populateGastoSel();

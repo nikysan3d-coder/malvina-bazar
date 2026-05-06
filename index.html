@@ -2158,6 +2158,7 @@ function renderDashboard() {
   // Gastos fijos pagados del mes (nuevo sistema)
   const gastosMesActual = (DB.gastosFijos||[]).filter(g => g.mesKey === mesKey && !g.cancelado);
   const gastosFijosPagados = gastosMesActual.filter(g => g.fecha).reduce((s,g) => s + g.monto, 0);
+  const gastosFijosPorPagar = gastosMesActual.filter(g => !g.fecha).reduce((s,g) => s + g.monto, 0);
   const gastosFijosTotal = gastosMesActual.reduce((s, g) => s + g.monto, 0);
 
   // Compras del mes
@@ -2214,7 +2215,7 @@ function renderDashboard() {
     <div class="kpi">
       <div class="kpi-label">Gastos pagados este mes</div>
       <div class="kpi-value">${fmtC(gastosFijosPagados)}</div>
-      <div class="kpi-sub">de ${fmtC(gastosFijosTotal)} cargados</div>
+      <div class="kpi-sub ${gastosFijosPorPagar>0?'kpi-neg':''}">Por pagar: ${fmtC(gastosFijosPorPagar)}</div>
     </div>
     <div class="kpi">
       <div class="kpi-label">Deuda con proveedores</div>
@@ -2389,13 +2390,15 @@ function renderDashboard() {
   }
 
   // Resultado estimado
-  const gastosFijosEstimados = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado).reduce((s,g)=>s+g.monto,0);
+  const gastosFijosEstimados = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&g.fecha).reduce((s,g)=>s+g.monto,0);
+  const gastosFijosProgr = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&!g.fecha).reduce((s,g)=>s+g.monto,0);
   const resultadoEstimado = ventasNetas - gastosFijosEstimados - gastosCaja - totalCompras;
   const resPreviewEl = document.getElementById('dash-resultado-preview');
   if (resPreviewEl) resPreviewEl.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
       <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Ventas netas</span><span style="font-family:var(--mono);color:var(--success)">+${fmtC(ventasNetas)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Gastos del mes</span><span style="font-family:var(--mono);color:var(--danger)">−${fmtC(gastosFijosEstimados)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Gastos pagados</span><span style="font-family:var(--mono);color:var(--danger)">−${fmtC(gastosFijosEstimados)}</span></div>
+      ${gastosFijosProgr>0?`<div style="display:flex;justify-content:space-between"><span style="color:var(--warning)">Gastos por pagar</span><span style="font-family:var(--mono);color:var(--warning)">−${fmtC(gastosFijosProgr)}</span></div>`:''}
       <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Otros egresos</span><span style="font-family:var(--mono);color:var(--danger)">−${fmtC(gastosCaja)}</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Compras proveedores</span><span style="font-family:var(--mono);color:var(--danger)">−${fmtC(totalCompras)}</span></div>
       <hr style="border:none;border-top:1px solid var(--border);margin:4px 0">
@@ -2961,16 +2964,17 @@ function renderResultado() {
   const comisiones = ingresos.filter(m=>m.monto>0).reduce((s,m) => s + (m.comision||0), 0);
   const ventasNetas = ventasBrutas - totalDevueltoMes - comisiones;
   const otrosEgresos = egresos.reduce((s,m) => s + m.monto, 0);
-  const gastosFijosTotal = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado).reduce((s,g) => s+g.monto, 0);
+  const gastosFijosTotal = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&g.fecha).reduce((s,g) => s+g.monto, 0);
+  const gastosFijosPendRes = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&!g.fecha).reduce((s,g) => s+g.monto, 0);
   const comprasMes = DB.compras.filter(c => c.fecha?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
 
   const resultado = ventasNetas - gastosFijosTotal - otrosEgresos - comprasMes;
 
   document.getElementById('resultado-kpis').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Ventas brutas</div><div class="kpi-value">${fmtC(ventasBrutas)}</div><div class="kpi-sub">${ingresos.length} transacciones</div></div>
-    <div class="kpi"><div class="kpi-label">Comisiones cobro</div><div class="kpi-value kpi-neg">${fmtC(comisiones)}</div><div class="kpi-sub">${ventasBrutas>0?(comisiones/ventasBrutas*100).toFixed(1)+'% del bruto':'—'}</div></div>
-    <div class="kpi"><div class="kpi-label">Ventas netas</div><div class="kpi-value">${fmtC(ventasNetas)}</div><div class="kpi-sub">Después de comisiones</div></div>
-    <div class="kpi"><div class="kpi-label">Resultado del período</div><div class="kpi-value ${resultado>=0?'kpi-pos':'kpi-neg'}">${fmtC(resultado)}</div><div class="kpi-sub">${resultado>=0?'Ganancia':'Pérdida'}</div></div>
+    <div class="kpi"><div class="kpi-label">Ventas brutas</div><div class="kpi-value">${fmtC(ventasBrutas)}</div><div class="kpi-sub">${ingresos.filter(m=>m.monto>0).length} ventas registradas</div></div>
+    <div class="kpi"><div class="kpi-label">Ventas netas</div><div class="kpi-value">${fmtC(ventasNetas)}</div><div class="kpi-sub">Comisiones: ${fmtC(comisiones)}</div></div>
+    <div class="kpi"><div class="kpi-label">Egresos del período</div><div class="kpi-value kpi-neg">${fmtC(gastosFijosTotal+gastosFijosPendRes+totalCompras+totalProgramado+otrosEgresos)}</div><div class="kpi-sub">${totalProgramado>0?'Incl. '+fmtC(totalProgramado)+' programados':''}</div></div>
+    <div class="kpi"><div class="kpi-label">Resultado del período</div><div class="kpi-value ${resultado>=0?'kpi-pos':'kpi-neg'}">${fmtC(resultado)}</div><div class="kpi-sub">${resultado>=0?'Ganancia estimada':'Pérdida estimada'}</div></div>
   `;
 
   // Ventas por medio
@@ -3542,7 +3546,10 @@ function renderProveedores() {
         <td class="num">${fmtC(c.aPagar||c.monto)}</td>
         <td><span class="badge ${c.pagado?'badge-ok':'badge-warn'}">${c.pagado?'Pagado':'Pendiente'}</span></td>
         <td style="font-size:12px;color:var(--text3)">${c.notas||'—'}</td>
-        <td><button class="action-btn danger" onclick="deleteCompra('${c.id}')">✕</button></td>
+        <td><div class="row-actions">
+          <button class="action-btn" onclick="editCompra('${c.id}')">✏️</button>
+          <button class="action-btn danger" onclick="deleteCompra('${c.id}')">✕</button>
+        </div></td>
       </tr>`;
     }).join('');
 
@@ -3605,16 +3612,27 @@ function saveCompra() {
   const prov = DB.proveedores.find(p => p.id === provId);
   const fechaPago = document.getElementById('compra-fecha-pago').value || vencimiento(fecha, prov?.diasPago||0) || fecha;
   const formaPago = document.getElementById('compra-forma-pago').value;
-  DB.compras.push({
-    id: uid(), provId, fecha, fechaPago, formaPago, monto, notas,
-    aPagar: monto, pagado: false, descuento: ''
-  });
+  const editId = document.getElementById('modal-compra').dataset.editId;
+
+  if (editId) {
+    const idx = DB.compras.findIndex(c => c.id === editId);
+    if (idx >= 0) {
+      DB.compras[idx] = { ...DB.compras[idx], provId, fecha, fechaPago, formaPago, monto, notas, aPagar: monto };
+    }
+    delete document.getElementById('modal-compra').dataset.editId;
+  } else {
+    DB.compras.push({
+      id: uid(), provId, fecha, fechaPago, formaPago, monto, notas,
+      aPagar: monto, pagado: false, descuento: ''
+    });
+  }
   saveDB();
   closeModal('modal-compra');
   document.getElementById('compra-monto').value = '';
   document.getElementById('compra-notas').value = '';
   renderProveedores();
   renderDashboard();
+  renderResultado();
 }
 
 function pagarCompra(id) {
@@ -3637,6 +3655,22 @@ function deleteCompra(id) {
   renderProveedores();
   renderDashboard();
   renderResultado();
+}
+
+function editCompra(id) {
+  const c = DB.compras.find(x => x.id === id);
+  if (!c) return;
+  // Pre-fill modal compra
+  populateCompraProv();
+  document.getElementById('compra-prov').value = c.provId;
+  document.getElementById('compra-fecha').value = c.fecha || '';
+  document.getElementById('compra-fecha-pago').value = c.fechaPago || '';
+  document.getElementById('compra-forma-pago').value = c.formaPago || 'contado';
+  document.getElementById('compra-monto').value = c.monto || '';
+  document.getElementById('compra-notas').value = c.notas || '';
+  // Store edit id
+  document.getElementById('modal-compra').dataset.editId = id;
+  openModal('modal-compra');
 }
 
 function editProv(id) {
@@ -3896,17 +3930,22 @@ function calcMargen() {
 
   const rows = DB.mediosPago.map(mp => {
     const costoComision = precio * mp.comision / 100;
-    const neto = precio - costoComision;
-    const margenNeto = ((neto - costo) / neto * 100).toFixed(1);
-    const color = margenNeto >= 50 ? 'var(--success)' : margenNeto >= 40 ? 'var(--warning)' : 'var(--danger)';
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-size:13px;font-weight:500">${mp.nombre}</div>
-        <div style="font-size:11px;color:var(--text3)">Comisión ${mp.comision}% = ${fmtC(costoComision)}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-family:var(--mono);font-size:13px">${fmtC(neto)}</div>
-        <div style="font-size:11px;color:${color};font-weight:500">${margenNeto}% margen</div>
+    const cobrado = precio - (costo > 0 ? precio * (DESCUENTOS_CLIENTE[mp.id]||0) / 100 : 0);
+    const neto = cobrado - (cobrado * mp.comision / 100);
+    const ganancia = neto - costo;
+    const margenPct = neto > 0 ? (ganancia / neto * 100).toFixed(1) : 0;
+    const color = margenPct >= 40 ? 'var(--success)' : margenPct >= 25 ? 'var(--warning)' : 'var(--danger)';
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:13px;font-weight:500">${mp.nombre}</div>
+          <div style="font-size:11px;color:var(--text3)">Comisión ${mp.comision}% = ${fmtC(precio*mp.comision/100)}</div>
+          ${costo>0?`<div style="font-size:11px;color:var(--warning)">Costo producto: −${fmtC(costo)}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--mono);font-size:13px">${fmtC(neto)} neto</div>
+          ${costo>0?`<div style="font-size:12px;font-weight:600;color:${color}">Ganancia: ${fmtC(ganancia)} (${margenPct}%)</div>`:`<div style="font-size:11px;color:var(--text3)">Ingresá el costo para ver ganancia</div>`}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -3951,9 +3990,16 @@ function checkPrecio() {
 function buildNovCard(n, allNotes) {
   const esPropia = n.usuario === currentUser?.nombre;
   const yaLeida = (n.leidaPor||[]).includes(currentUser?.nombre);
-  const leidaLabel = n.leidaPor?.length > 0
-    ? n.leidaPor.map(u => `✓ ${u}`).join(' · ')
-    : (esPropia ? 'No leída aún' : '');
+  // WhatsApp-style: quién leyó y quién no
+  const otrosActivos = (DB.usuarios||[]).filter(u => u.activo && u.nombre !== n.usuario);
+  const leyeron = (n.leidaPor||[]).filter(u => u !== n.usuario);
+  const noLeyeron = otrosActivos.filter(u => !(n.leidaPor||[]).includes(u.nombre));
+  let leidaLabel = '';
+  if (esPropia) {
+    if (leyeron.length === 0) leidaLabel = '⏳ Sin leer';
+    else if (noLeyeron.length === 0) leidaLabel = '✓✓ Leída por todos';
+    else leidaLabel = '✓ ' + leyeron.map(u=>u).join(', ') + (noLeyeron.length>0?' · Sin leer: '+noLeyeron.map(u=>u.nombre).join(', '):'');
+  }
   const replies = allNotes.filter(r => r.replyTo === n.id).sort((a,b) => (a.hora||'').localeCompare(b.hora||''));
   const isUnread = !esPropia && !yaLeida;
 
@@ -3968,8 +4014,8 @@ function buildNovCard(n, allNotes) {
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:${yaLeida||esPropia?'var(--text3)':'var(--warning)'}">
-            ${esPropia ? (n.leidaPor?.length>0 ? leidaLabel : '⏳ No leída') : (yaLeida ? '✓ Leída' : '● No leída')}
+          <span style="font-size:11px;color:${esPropia?(leyeron.length===0?'var(--text3)':noLeyeron.length===0?'var(--success)':'var(--info)'):(yaLeida?'var(--success)':'var(--warning)')}">
+            ${esPropia ? leidaLabel : (yaLeida ? '✓ Leída' : '● No leída')}
           </span>
           ${!esPropia && !yaLeida ? `<button class="action-btn" onclick="marcarNovLeida('${n.id}')">✓ Marcar leída</button>` : ''}
           <button class="action-btn" onclick="toggleReplyBox('reply-box-${n.id}')">↩ Responder</button>
@@ -4067,8 +4113,19 @@ function renderNovedades() {
       </div>`;
     } else {
       // Only show root notes (no replies) at top level
+      // Mostrar en "hoy" solo las no leídas por el usuario actual (o las propias)
       const rootNotes = notasDia.filter(n => !n.replyTo);
-      lista.innerHTML = rootNotes.map(n => buildNovCard(n, notasDia)).join('');
+      const notasVisibles = rootNotes.filter(n =>
+        n.usuario === currentUser?.nombre ||  // propias siempre
+        !(n.leidaPor||[]).includes(currentUser?.nombre) // de otros: solo no leídas
+      );
+      if (notasVisibles.length === 0 && rootNotes.length > 0) {
+        lista.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text3);font-size:13px">
+          ✓ Leíste todas las notas de hoy. Aparecen en "Notas recientes".
+        </div>`;
+      } else {
+        lista.innerHTML = notasVisibles.map(n => buildNovCard(n, notasDia)).join('');
+      }
     }
   }
 
@@ -4142,6 +4199,10 @@ function marcarNovLeida(id) {
   if (!n.leidaPor.includes(currentUser?.nombre)) {
     n.leidaPor.push(currentUser?.nombre);
   }
+  // Verificar si todos los usuarios activos (excepto el autor) ya la leyeron
+  const otrosUsuarios = (DB.usuarios||[]).filter(u => u.activo && u.nombre !== n.usuario);
+  const todosLeyeron = otrosUsuarios.every(u => (n.leidaPor||[]).includes(u.nombre));
+  n.leidaTodos = todosLeyeron;
   saveDB();
   renderNovedades();
   updateAlertBadge();

@@ -893,6 +893,67 @@
                 <input type="number" class="form-input" id="venta-desc-valor" placeholder="Ej: 15 (para 15%) o 3000 (para $3.000)" oninput="updateVentaPreview()">
               </div>
             </div>
+
+            <!-- Toggle pago mixto -->
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
+                <input type="checkbox" id="venta-mixto" onchange="toggleMixto()">
+                <span>Pago mixto (el cliente paga con dos medios)</span>
+              </label>
+            </div>
+
+            <!-- PAGO MIXTO -->
+            <div id="pago-mixto-section" style="display:none">
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
+                <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Parte 1</div>
+                <div class="grid-2" style="gap:8px;margin-bottom:8px">
+                  <div><label class="form-label">Monto ($)</label>
+                    <input type="number" class="form-input" id="mixto-monto1" placeholder="0" oninput="updateVentaPreview()"></div>
+                  <div><label class="form-label">Medio</label>
+                    <select class="form-select" id="mixto-medio1" onchange="updateVentaPreview()">
+                      <option value="efectivo">💵 Efectivo</option>
+                      <option value="qr_cuenta">📱 QR Laucha</option>
+                      <option value="debito">💳 Débito</option>
+                      <option value="credito1">💳 Crédito 1c</option>
+                      <option value="credito3">💳 Crédito 3c Mi Pyme</option>
+                    </select></div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <select class="form-select" id="mixto-desc-tipo1" onchange="updateVentaPreview()" style="flex:1">
+                    <option value="estandar">Descuento estándar</option>
+                    <option value="ninguno">Sin descuento</option>
+                    <option value="porcentaje">% personalizado</option>
+                    <option value="monto">Monto fijo ($)</option>
+                  </select>
+                  <input type="number" class="form-input" id="mixto-desc-val1" placeholder="valor" style="width:90px" oninput="updateVentaPreview()">
+                </div>
+              </div>
+              <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px">
+                <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Parte 2</div>
+                <div class="grid-2" style="gap:8px;margin-bottom:8px">
+                  <div><label class="form-label">Monto ($)</label>
+                    <input type="number" class="form-input" id="mixto-monto2" placeholder="0" oninput="updateVentaPreview()"></div>
+                  <div><label class="form-label">Medio</label>
+                    <select class="form-select" id="mixto-medio2" onchange="updateVentaPreview()">
+                      <option value="qr_cuenta">📱 QR Laucha</option>
+                      <option value="efectivo">💵 Efectivo</option>
+                      <option value="debito">💳 Débito</option>
+                      <option value="credito1">💳 Crédito 1c</option>
+                      <option value="credito3">💳 Crédito 3c Mi Pyme</option>
+                    </select></div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <select class="form-select" id="mixto-desc-tipo2" onchange="updateVentaPreview()" style="flex:1">
+                    <option value="estandar">Descuento estándar</option>
+                    <option value="ninguno">Sin descuento</option>
+                    <option value="porcentaje">% personalizado</option>
+                    <option value="monto">Monto fijo ($)</option>
+                  </select>
+                  <input type="number" class="form-input" id="mixto-desc-val2" placeholder="valor" style="width:90px" oninput="updateVentaPreview()">
+                </div>
+              </div>
+            </div>
+
             <div id="venta-preview-box" style="background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;font-size:13px"></div>
             <button class="btn btn-primary" onclick="guardarVenta()" style="width:100%">Guardar venta</button>
           </div>

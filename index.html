@@ -2967,6 +2967,7 @@ function renderResultado() {
   const gastosFijosTotal = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&g.fecha).reduce((s,g) => s+g.monto, 0);
   const gastosFijosPendRes = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&!g.fecha).reduce((s,g) => s+g.monto, 0);
   const totalCompras = DB.compras.filter(c => c.fecha?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
+  const totalProgramado = (DB.compras||[]).filter(c => !c.pagado && !c.fecha?.startsWith(mesKey) && c.fechaPago?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
 
   const resultado = ventasNetas - gastosFijosTotal - gastosFijosPendRes - otrosEgresos - totalCompras - totalProgramado;
 

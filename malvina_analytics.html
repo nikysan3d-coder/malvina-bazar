@@ -553,9 +553,11 @@ function renderResumen() {
   const totalDevuelto = devols.reduce((s,m)=>s+Math.abs(m.monto),0);
   const gastosMes = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado);
   const gastosPagados = gastosMes.filter(g=>g.fecha).reduce((s,g)=>s+g.monto,0);
+  const gastosPorPagar = gastosMes.filter(g=>!g.fecha).reduce((s,g)=>s+g.monto,0);
   const gastosTotales = gastosMes.reduce((s,g)=>s+g.monto,0);
   const comprasMes = (DB.compras||[]).filter(c=>c.fecha?.startsWith(mesKey)).reduce((s,c)=>s+c.monto,0);
-  const resultado = vNetas - gastosPagados - egresos.reduce((s,m)=>s+m.monto,0) - comprasMes;
+  const comprasProg = (DB.compras||[]).filter(c=>!c.pagado&&!c.fecha?.startsWith(mesKey)&&c.fechaPago?.startsWith(mesKey)).reduce((s,c)=>s+c.monto,0);
+  const resultado = vNetas - gastosPagados - egresos.reduce((s,m)=>s+m.monto,0) - comprasMes - comprasProg;
 
   // Alertas resumen
   const hoy = new Date();
@@ -731,12 +733,17 @@ function renderMensual() {
   });
   gastosFuturos.forEach(g => datesSet.add(g.vto));
 
+  // Compras programadas para pagar este mes (aunque se compraron otro mes)
   const comprasFuturas = (DB.compras||[]).filter(c => {
     if (c.pagado) return false;
     const fp = c.fechaPago || '';
     return fp.startsWith(mesKey);
   });
   comprasFuturas.forEach(c => { if (c.fechaPago) datesSet.add(c.fechaPago); });
+  
+  // También compras compradas este mes pero que se pagan después
+  const comprasCompradasMes = (DB.compras||[]).filter(c => c.fecha?.startsWith(mesKey) && !c.pagado && !c.fechaPago?.startsWith(mesKey));
+  comprasCompradasMes.forEach(c => { if (c.fecha) datesSet.add(c.fecha); });
 
   const allDates = [...datesSet].sort((a,b)=>a.localeCompare(b));
   const maxVenta = Math.max(...allDates.map(d => {
@@ -837,7 +844,7 @@ function renderMensual() {
 
       // Gastos pagados ese día
       if (gastosDia.length > 0) {
-        html += `<div class="detail-section"><div class="detail-label" style="color:var(--danger)">Gastos pagados</div>`;
+        html += `<div class="detail-section"><div class="detail-label" style="color:var(--danger)">✓ Gastos pagados</div>`;
         gastosDia.forEach(g => {
           html += `<div class="detail-row">
             <div><span style="color:var(--text2)">${g.nombre}</span> <span style="font-size:11px;color:var(--text3)">${g.medio||''}</span></div>
@@ -847,13 +854,13 @@ function renderMensual() {
         html += `</div>`;
       }
 
-      // Gastos futuros con vto ese día
+      // Gastos con vencimiento ese día (por pagar)
       if (gastoFutDia.length > 0) {
-        html += `<div class="detail-section"><div class="detail-label" style="color:var(--warning)">⏰ Vence hoy / pendiente</div>`;
+        html += `<div class="detail-section"><div class="detail-label" style="color:var(--warning)">⏰ Por pagar — vence este día</div>`;
         gastoFutDia.forEach(g => {
           html += `<div class="detail-row">
-            <span style="color:var(--warning)">${g.nombre}</span>
-            <span style="font-family:var(--mono)">${fmt(g.monto)}</span>
+            <div><span style="color:var(--warning)">${g.nombre}</span><div style="font-size:11px;color:var(--text3)">${fmt(g.monto)} · ${g.medio||'—'}</div></div>
+            <span class="badge badge-warn">Por pagar</span>
           </div>`;
         });
         html += `</div>`;
@@ -874,12 +881,18 @@ function renderMensual() {
 
       // Vencimiento de pago de compra ese día
       if (compFutDia.length > 0) {
-        html += `<div class="detail-section"><div class="detail-label" style="color:var(--warning)">📦 Pago proveedor vence</div>`;
+        html += `<div class="detail-section"><div class="detail-label" style="color:var(--warning)">📦 Pago programado a proveedor</div>`;
         compFutDia.forEach(c => {
           const prov = (DB.proveedores||[]).find(p=>p.id===c.provId);
           html += `<div class="detail-row">
-            <span style="color:var(--warning)">${prov?.nombre||'—'} · ${c.formaPago||''}</span>
-            <span style="font-family:var(--mono)">${fmt(c.monto)}</span>
+            <div>
+              <span style="color:var(--warning);font-weight:500">${prov?.nombre||'—'}</span>
+              <div style="font-size:11px;color:var(--text3)">Comprado: ${c.fecha||'—'} · ${c.formaPago||'contado'}</div>
+            </div>
+            <div style="text-align:right">
+              <span style="font-family:var(--mono)">${fmt(c.monto)}</span>
+              <div><span class="badge badge-warn" style="font-size:10px">Por pagar</span></div>
+            </div>
           </div>`;
         });
         html += `</div>`;

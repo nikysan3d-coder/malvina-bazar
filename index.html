@@ -2966,9 +2966,9 @@ function renderResultado() {
   const otrosEgresos = egresos.reduce((s,m) => s + m.monto, 0);
   const gastosFijosTotal = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&g.fecha).reduce((s,g) => s+g.monto, 0);
   const gastosFijosPendRes = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&!g.fecha).reduce((s,g) => s+g.monto, 0);
-  const comprasMes = DB.compras.filter(c => c.fecha?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
+  const totalCompras = DB.compras.filter(c => c.fecha?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
 
-  const resultado = ventasNetas - gastosFijosTotal - otrosEgresos - comprasMes;
+  const resultado = ventasNetas - gastosFijosTotal - gastosFijosPendRes - otrosEgresos - totalCompras - totalProgramado;
 
   document.getElementById('resultado-kpis').innerHTML = `
     <div class="kpi"><div class="kpi-label">Ventas brutas</div><div class="kpi-value">${fmtC(ventasBrutas)}</div><div class="kpi-sub">${ingresos.filter(m=>m.monto>0).length} ventas registradas</div></div>
@@ -3007,10 +3007,10 @@ function renderResultado() {
   document.getElementById('resultado-costos').innerHTML = `
     <div style="font-size:13px">
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Gastos del mes</span><span style="font-family:var(--mono)">${fmtC(gastosFijosTotal)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Compras proveedores</span><span style="font-family:var(--mono)">${fmtC(comprasMes)}</span></div>
+
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Devoluciones a clientes</span><span style="font-family:var(--mono);color:var(--warning)">${fmtC(totalDevueltoMes)}</span></div>
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Otros egresos</span><span style="font-family:var(--mono)">${fmtC(otrosEgresos)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600"><span>Total costos</span><span style="font-family:var(--mono);color:var(--danger)">${fmtC(gastosFijosTotal+comprasMes+otrosEgresos+totalDevueltoMes)}</span></div>
+
     </div>
   `;
 

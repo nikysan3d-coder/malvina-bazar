@@ -2357,7 +2357,22 @@ function renderDashboard() {
     dashGastosHtml += pagD.map(g=>dashGastoRow(g,true)).join('');
   }
   if (!dashGastosHtml) dashGastosHtml = '<div style="color:var(--text3);font-size:13px;padding:12px 0">Sin gastos cargados este mes</div>';
-  dashGastosHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;font-size:13px;border-top:1px solid var(--border);margin-top:4px"><span>Total del mes</span><span style="font-family:var(--mono)">${fmtC(totalGastosMes)}</span></div>`;
+  const totalGastosPag = gastosDelMesD.filter(g=>g.fecha).reduce((s,g)=>s+g.monto,0);
+  const totalGastosPend = gastosDelMesD.filter(g=>!g.fecha).reduce((s,g)=>s+g.monto,0);
+  dashGastosHtml += `
+    <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px">
+        <span style="color:var(--success)">✓ Pagado</span>
+        <span style="font-family:var(--mono);color:var(--success)">${fmtC(totalGastosPag)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px">
+        <span style="color:var(--warning)">⏳ Por pagar</span>
+        <span style="font-family:var(--mono);color:var(--warning)">${fmtC(totalGastosPend)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-weight:600;font-size:13px;border-top:0.5px solid var(--border);margin-top:4px">
+        <span>Total del mes</span><span style="font-family:var(--mono)">${fmtC(totalGastosMes)}</span>
+      </div>
+    </div>`;
   if (catNoCarg.length > 0) dashGastosHtml += `<div style="font-size:12px;color:var(--warning);margin-top:6px">⚠️ ${catNoCarg.length} ítem${catNoCarg.length>1?'s':''} del catálogo sin cargar</div>`;
   document.getElementById('dash-gastos-estado').innerHTML = dashGastosHtml;
 
@@ -2566,6 +2581,35 @@ function renderCaja() {
       </div></td>
     </tr>`;
   }).join('');
+}
+
+function resetResPag() {
+  const el = document.getElementById('res-pagina');
+  if (el) el.dataset.pagina = '1';
+}
+
+function cambiarPagRes(pag) {
+  const el = document.getElementById('res-pagina');
+  if (el) el.dataset.pagina = pag;
+  renderResultado();
+  document.getElementById('res-paginacion')?.scrollIntoView({behavior:'smooth'});
+}
+
+function resetHistPag() {
+  const el = document.getElementById('hist-pagina');
+  if (el) el.dataset.pagina = '1';
+}
+
+function cambiarPagHist(pag) {
+  const el = document.getElementById('hist-pagina') || (() => {
+    const d = document.createElement('div');
+    d.id = 'hist-pagina';
+    document.body.appendChild(d);
+    return d;
+  })();
+  el.dataset.pagina = pag;
+  renderCaja();
+  document.getElementById('hist-paginacion')?.scrollIntoView({behavior:'smooth'});
 }
 
 function cajaTab(tab, el) {
@@ -3033,7 +3077,7 @@ function renderResultado() {
   const totalCompras = DB.compras.filter(c => c.fecha?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
   const totalProgramado = (DB.compras||[]).filter(c => !c.pagado && !c.fecha?.startsWith(mesKey) && c.fechaPago?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
 
-  const resultado = ventasNetas - gastosFijosTotal - gastosFijosPendRes - otrosEgresos - totalCompras - totalProgramado;
+  const resultado = ventasNetas - gastosFijosTotal - gastosFijosPendRes - otrosEgresos - comprasPagadasMes - comprasPorPagarMes - totalDevueltoMes;
 
   document.getElementById('resultado-kpis').innerHTML = `
     <div class="kpi"><div class="kpi-label">Ventas brutas</div><div class="kpi-value">${fmtC(ventasBrutas)}</div><div class="kpi-sub">${ingresos.filter(m=>m.monto>0).length} ventas registradas</div></div>

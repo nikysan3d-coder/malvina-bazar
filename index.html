@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1.8.8 -->
+<!-- v1.8.9 -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -3151,25 +3151,97 @@ function renderResultado() {
     </div>
   `;
 
-  // Tabla movimientos
-  const tbody = document.getElementById('resultado-movs') || document.getElementById('resultado-tabla');
-  if (movMes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">Sin movimientos en este período</td></tr>`;
-    return;
+  // Tabla unificada de movimientos (ventas + gastos + compras + devoluciones)
+  const filtroRes = document.getElementById('res-filtro-tipo')?.value || '';
+  const filtroFechaD = document.getElementById('res-filtro-fecha-d')?.value || '';
+  const filtroFechaH = document.getElementById('res-filtro-fecha-h')?.value || '';
+  const resPagina = parseInt(document.getElementById('res-pagina')?.dataset?.pagina || '1');
+  const RES_POR_PAG = 20;
+
+  // Construir lista unificada
+  let todosMovsRes = [];
+
+  // Movimientos de caja (ventas, egresos, devoluciones, cierres)
+  movMes.forEach(m => {
+    const isDevolucion = m.esDevolucion || (m.tipo==='ingreso' && m.monto<0);
+    const tipo = m.tipo==='egreso' ? 'Egreso' : isDevolucion ? 'Devolución' : m.esCierre ? 'Cierre' : 'Venta';
+    const mp = DB.mediosPago.find(x=>x.id===m.medio);
+    todosMovsRes.push({
+      fecha: m.fecha||'', hora: m.hora||'',
+      tipo, desc: m.tipo==='egreso' ? m.concepto : (m.esCierre ? `Cierre — ${mp?.nombre||m.medio}` : (m.concepto||mp?.nombre||m.medio||'—')),
+      monto: Math.abs(m.monto), esNeg: m.tipo==='egreso'||isDevolucion,
+      usuario: m.usuario||'—', nota: m.nota||''
+    });
+  });
+
+  // Gastos del mes (pagados y pendientes)
+  gastosMes.forEach(g => {
+    todosMovsRes.push({
+      fecha: g.fecha||g.vto||'', hora:'',
+      tipo: g.fecha ? 'Gasto pagado' : 'Gasto pendiente',
+      desc: g.nombre + (g.cat ? ` (${g.cat})` : ''),
+      monto: g.monto, esNeg: true,
+      usuario: '—', nota: g.notas||''
+    });
+  });
+
+  // Compras a proveedores (por fechaPago del mes)
+  (DB.compras||[]).filter(c => (c.fechaPago||c.fecha||'').startsWith(mesKey)).forEach(c => {
+    const prov = (DB.proveedores||[]).find(p=>p.id===c.provId);
+    todosMovsRes.push({
+      fecha: c.fechaPago||c.fecha||'', hora:'',
+      tipo: c.pagado ? 'Compra pagada' : 'Compra por pagar',
+      desc: prov?.nombre || 'Proveedor',
+      monto: c.monto, esNeg: true,
+      usuario: '—', nota: c.notas||''
+    });
+  });
+
+  // Aplicar filtros
+  let movsFiltRes = todosMovsRes.filter(m => {
+    if (filtroRes && m.tipo !== filtroRes) return false;
+    if (filtroFechaD && m.fecha < filtroFechaD) return false;
+    if (filtroFechaH && m.fecha > filtroFechaH) return false;
+    return true;
+  }).sort((a,b) => (b.fecha+b.hora).localeCompare(a.fecha+a.hora));
+
+  const totalResPags = Math.ceil(movsFiltRes.length / RES_POR_PAG) || 1;
+  const resPagActual = Math.min(resPagina, totalResPags);
+  const movsPagRes = movsFiltRes.slice((resPagActual-1)*RES_POR_PAG, resPagActual*RES_POR_PAG);
+
+  const tipoBadge = {
+    'Venta':'badge-ok','Cierre':'badge-info','Egreso':'badge-danger',
+    'Devolución':'badge-warn','Gasto pagado':'badge-danger','Gasto pendiente':'badge-warn',
+    'Compra pagada':'badge-info','Compra por pagar':'badge-warn'
+  };
+
+  const paginResEl = document.getElementById('res-paginacion');
+  if (paginResEl) {
+    paginResEl.innerHTML = movsFiltRes.length > RES_POR_PAG ? `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;font-size:13px">
+        <span style="color:var(--text3)">${movsFiltRes.length} registros · Página ${resPagActual} de ${totalResPags}</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" ${resPagActual<=1?'disabled':''} onclick="cambiarPagRes(${resPagActual-1})">← Anterior</button>
+          <button class="btn btn-secondary btn-sm" ${resPagActual>=totalResPags?'disabled':''} onclick="cambiarPagRes(${resPagActual+1})">Siguiente →</button>
+        </div>
+      </div>` : `<div style="font-size:12px;color:var(--text3);padding:6px 0">${movsFiltRes.length} registros</div>`;
   }
 
-  tbody.innerHTML = movMes.sort((a,b) => a.fecha?.localeCompare(b.fecha)).map(m => {
-    const mp = DB.mediosPago.find(x => x.id === m.medio);
-    return `<tr>
-      <td style="font-size:12px;font-family:var(--mono)">${m.fecha}</td>
-      <td>${m.concepto}</td>
-      <td><span class="badge ${m.tipo==='ingreso'?'badge-ok':'badge-danger'}">${m.tipo==='ingreso'?'Venta':'Egreso'}</span></td>
-      <td>${m.tipo==='ingreso'?(mp?.nombre||m.medio):'—'}</td>
-      <td class="num">${fmtC(m.monto)}</td>
-      <td class="num" style="color:var(--danger)">${m.comision?fmtC(m.comision):'—'}</td>
-      <td class="num" style="color:${m.tipo==='ingreso'?'var(--success)':'var(--danger)'}">${m.tipo==='ingreso'?fmtC(m.neto||m.monto):`−${fmtC(m.monto)}`}</td>
-    </tr>`;
-  }).join('');
+  const tbody = document.getElementById('resultado-movs');
+  if (!tbody) return;
+  tbody.innerHTML = movsPagRes.length === 0
+    ? `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">Sin movimientos para los filtros seleccionados</td></tr>`
+    : movsPagRes.map(m => `<tr>
+        <td style="font-family:var(--mono);font-size:12px">${m.fecha}</td>
+        <td>
+          <div>${m.desc}</div>
+          ${m.nota?`<div style="font-size:11px;color:var(--text3)">${m.nota}</div>`:''}
+        </td>
+        <td><span class="badge ${tipoBadge[m.tipo]||'badge-gray'}" style="font-size:11px;white-space:nowrap">${m.tipo}</span></td>
+        <td class="num" style="font-family:var(--mono)">${fmtC(m.monto)}</td>
+        <td style="font-size:12px;color:var(--text3)">${m.usuario}</td>
+        <td class="num" style="font-family:var(--mono);font-weight:500;color:${m.esNeg?'var(--danger)':'var(--success)'}">${m.esNeg?'−':''}${fmtC(m.monto)}</td>
+      </tr>`).join('');
 }
 
 // ============================================================

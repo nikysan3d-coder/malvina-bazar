@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1.8.9 -->
+<!-- v1.9.0 -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -1001,7 +1001,9 @@
 
       <!-- TAB: Historial -->
       <div class="tab-panel" id="caja-tab-historial">
+        <div id="caja-pag-estado" style="display:none"></div>
         <div class="card">
+          <div id="caja-paginacion" style="margin-bottom:10px"></div>
           <div class="table-wrap">
             <table>
               <thead>
@@ -1020,6 +1022,7 @@
               <tbody id="caja-tabla"></tbody>
             </table>
           </div>
+          <div id="caja-paginacion-bottom" style="margin-top:10px"></div>
         </div>
       </div>
 
@@ -2572,7 +2575,9 @@ function renderCaja() {
   }
   updateCierrePreview();
 
-  // Historial completo (tab historial)
+  // Historial completo paginado (tab historial)
+  const CAJA_POR_PAG = 20;
+  const cajaPag = parseInt(document.getElementById('caja-pag-estado')?.dataset?.pagina || '1');
   const tabla = document.getElementById('caja-tabla');
   if (!tabla) return;
   const todosMovs = [...DB.movimientos].sort((a,b) => ((b.fecha||'')+(b.hora||'')).localeCompare((a.fecha||'')+(a.hora||'')));
@@ -2617,6 +2622,13 @@ function cambiarPagRes(pag) {
   if (el) el.dataset.pagina = pag;
   renderResultado();
   document.getElementById('res-paginacion')?.scrollIntoView({behavior:'smooth'});
+}
+
+function cambiarPagCaja(pag) {
+  const el = document.getElementById('caja-pag-estado');
+  if (el) el.dataset.pagina = pag;
+  renderCaja();
+  document.getElementById('caja-paginacion')?.scrollIntoView({behavior:'smooth'});
 }
 
 function resetHistPag() {

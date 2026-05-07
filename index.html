@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Malvina Bazar — Sistema de Administración</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- v1.8.6 -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -2262,7 +2266,7 @@ function renderDashboard() {
   document.getElementById('dash-alertas').innerHTML = alertasHtml;
 
   // KPIs
-  const deudasPendientes = DB.compras.filter(c => !c.pagado);
+  const deudasPendientes = (DB.compras||[]).filter(c => !c.pagado && ((c.fechaPago||'').startsWith(mesKey) || (c.fechaPago && c.fechaPago < mesKey)));
   const totalDeudaProv = deudasPendientes.reduce((s,c) => s + c.monto, 0);
 
   document.getElementById('dash-kpis').innerHTML = `
@@ -2396,18 +2400,19 @@ function renderDashboard() {
       </div>`;
   }
 
-  // Deuda con proveedores — pendientes con fecha de pago
-  const deudasPend = DB.compras.filter(c => !c.pagado).sort((a,b)=>(a.fechaPago||a.fecha||'').localeCompare(b.fechaPago||b.fecha||''));
+  // Deuda con proveedores — solo las del mes actual y vencidas
+  const hoyD2 = new Date();
+  const deudasMesActual = (DB.compras||[]).filter(c => !c.pagado && (c.fechaPago||'').startsWith(mesKey));
+  const deudasVencMes = (DB.compras||[]).filter(c => !c.pagado && c.fechaPago && c.fechaPago < mesKey);
+  const todasDeudasMes = [...deudasVencMes, ...deudasMesActual].sort((a,b)=>(a.fechaPago||'').localeCompare(b.fechaPago||''));
   const devEl = document.getElementById('dash-deuda-proveedores');
-  if (!devEl) {} else if (deudasPend.length === 0) {
-    devEl.innerHTML = '<div style="color:var(--success);font-size:13px;padding:8px 0">✅ Sin deudas pendientes</div>';
+  if (!devEl) {} else if (todasDeudasMes.length === 0) {
+    devEl.innerHTML = '<div style="color:var(--success);font-size:13px;padding:8px 0">✅ Sin deudas para este mes</div>';
   } else {
-    const hoyD2 = new Date();
-    devEl.innerHTML = deudasPend.map(c => {
-      const prov = DB.proveedores.find(p => p.id === c.provId);
+    devEl.innerHTML = todasDeudasMes.map(c => {
+      const prov = (DB.proveedores||[]).find(p => p.id === c.provId);
       const fechaPago = c.fechaPago || c.fecha || '';
-      const vtoDate = fechaPago ? new Date(fechaPago) : null;
-      const dias = vtoDate ? Math.round((vtoDate - hoyD2) / 86400000) : null;
+      const dias = fechaPago ? Math.round((new Date(fechaPago) - hoyD2) / 86400000) : null;
       let badge = '';
       if (dias !== null) {
         if (dias < 0) badge = `<span class="badge badge-danger" style="font-size:10px">Vencido</span>`;
@@ -2426,7 +2431,7 @@ function renderDashboard() {
       </div>`;
     }).join('') +
     `<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;font-size:13px;border-top:1px solid var(--border);margin-top:4px">
-      <span>Total deuda</span><span style="font-family:var(--mono);color:var(--danger)">${fmtC(deudasPend.reduce((s,c)=>s+c.monto,0))}</span>
+      <span>Total este mes</span><span style="font-family:var(--mono);color:var(--danger)">${fmtC(todasDeudasMes.reduce((s,c)=>s+c.monto,0))}</span>
     </div>`;
   }
 

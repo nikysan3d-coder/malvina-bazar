@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1.8.7 -->
+<!-- v1.8.8 -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -2248,7 +2248,8 @@ function renderDashboard() {
   const gastosFijosTotal = gastosMesActual.reduce((s, g) => s + g.monto, 0);
 
   // Compras del mes
-  const comprasMes = DB.compras.filter(c => c.fecha?.startsWith(mesKey));
+  // Dashboard: compras por fecha de PAGO del mes
+  const comprasMes = DB.compras.filter(c => (c.fechaPago||c.fecha||'').startsWith(mesKey));
   const totalCompras = comprasMes.reduce((s,c) => s + c.monto, 0);
 
   const resultado = ventasNetas - gastosFijosPagados - gastosCaja;
@@ -2399,7 +2400,7 @@ function renderDashboard() {
   document.getElementById('dash-gastos-estado').innerHTML = dashGastosHtml;
 
   // Proveedores — pagados (historial del mes)
-  const provPagados = DB.compras.filter(c => c.pagado && c.fecha?.startsWith(mesKey));
+  const provPagados = DB.compras.filter(c => c.pagado && (c.fechaPago||c.fecha||'').startsWith(mesKey));
   const totalPagadoProv = provPagados.reduce((s,c) => s + c.monto, 0);
   if (provPagados.length === 0) {
     document.getElementById('dash-proveedores').innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0">Sin compras pagas este mes</div>';
@@ -3097,8 +3098,9 @@ function renderResultado() {
   const otrosEgresos = egresos.reduce((s,m) => s + m.monto, 0);
   const gastosFijosTotal = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&g.fecha).reduce((s,g) => s+g.monto, 0);
   const gastosFijosPendRes = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&!g.fecha).reduce((s,g) => s+g.monto, 0);
-  const totalCompras = DB.compras.filter(c => c.fecha?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
-  const totalProgramado = (DB.compras||[]).filter(c => !c.pagado && !c.fecha?.startsWith(mesKey) && c.fechaPago?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
+  // Compras: usar fechaPago como referencia del mes, no fecha de compra
+  const totalCompras = 0; // ya no se usa directamente
+  const totalProgramado = 0; // ya no se usa directamente
 
   // Compras pagadas y por pagar este mes
   const comprasPagadasMes = (DB.compras||[]).filter(c => c.pagado && c.fechaPago?.startsWith(mesKey)).reduce((s,c)=>s+c.monto,0);
@@ -3108,7 +3110,7 @@ function renderResultado() {
   document.getElementById('resultado-kpis').innerHTML = `
     <div class="kpi"><div class="kpi-label">Ventas brutas</div><div class="kpi-value">${fmtC(ventasBrutas)}</div><div class="kpi-sub">${ingresos.filter(m=>m.monto>0).length} ventas registradas</div></div>
     <div class="kpi"><div class="kpi-label">Ventas netas</div><div class="kpi-value">${fmtC(ventasNetas)}</div><div class="kpi-sub">Comisiones: ${fmtC(comisiones)}</div></div>
-    <div class="kpi"><div class="kpi-label">Egresos del período</div><div class="kpi-value kpi-neg">${fmtC(gastosFijosTotal+gastosFijosPendRes+totalCompras+totalProgramado+otrosEgresos)}</div><div class="kpi-sub">${totalProgramado>0?'Incl. '+fmtC(totalProgramado)+' programados':''}</div></div>
+    <div class="kpi"><div class="kpi-label">Egresos del período</div><div class="kpi-value kpi-neg">${fmtC(gastosFijosTotal+gastosFijosPendRes+comprasPagadasMes+comprasPorPagarMes+otrosEgresos)}</div><div class="kpi-sub">${comprasPorPagarMes>0?'Incl. '+fmtC(comprasPorPagarMes)+' por pagar':''}</div></div>
     <div class="kpi"><div class="kpi-label">Resultado del período</div><div class="kpi-value ${resultado>=0?'kpi-pos':'kpi-neg'}">${fmtC(resultado)}</div><div class="kpi-sub">${resultado>=0?'Ganancia estimada':'Pérdida estimada'}</div></div>
   `;
 

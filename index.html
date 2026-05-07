@@ -3077,6 +3077,9 @@ function renderResultado() {
   const totalCompras = DB.compras.filter(c => c.fecha?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
   const totalProgramado = (DB.compras||[]).filter(c => !c.pagado && !c.fecha?.startsWith(mesKey) && c.fechaPago?.startsWith(mesKey)).reduce((s,c) => s+c.monto, 0);
 
+  // Compras pagadas y por pagar este mes
+  const comprasPagadasMes = (DB.compras||[]).filter(c => c.pagado && c.fechaPago?.startsWith(mesKey)).reduce((s,c)=>s+c.monto,0);
+  const comprasPorPagarMes = (DB.compras||[]).filter(c => !c.pagado && c.fechaPago?.startsWith(mesKey)).reduce((s,c)=>s+c.monto,0);
   const resultado = ventasNetas - gastosFijosTotal - gastosFijosPendRes - otrosEgresos - comprasPagadasMes - comprasPorPagarMes - totalDevueltoMes;
 
   document.getElementById('resultado-kpis').innerHTML = `

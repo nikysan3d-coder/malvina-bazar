@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1.8.6 -->
+<!-- v1.8.7 -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -1052,21 +1052,39 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Movimientos del período</div>
+        <div class="flex-between mb-16">
+          <div class="section-title">Todos los movimientos del período</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select class="form-select" id="res-filtro-tipo" onchange="resetResPag();renderResultado()" style="width:160px">
+              <option value="">Todos los tipos</option>
+              <option value="Venta">Ventas</option>
+              <option value="Cierre">Cierres</option>
+              <option value="Egreso">Egresos</option>
+              <option value="Devolución">Devoluciones</option>
+              <option value="Gasto pagado">Gastos pagados</option>
+              <option value="Gasto pendiente">Gastos pendientes</option>
+              <option value="Compra pagada">Compras pagas</option>
+              <option value="Compra por pagar">Compras por pagar</option>
+            </select>
+            <input type="date" class="form-input" id="res-filtro-fecha-d" style="width:140px" onchange="resetResPag();renderResultado()">
+            <input type="date" class="form-input" id="res-filtro-fecha-h" style="width:140px" onchange="resetResPag();renderResultado()">
+          </div>
+        </div>
+        <div id="res-pagina" data-pagina="1" style="display:none"></div>
+        <div id="res-paginacion"></div>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Fecha</th>
-                <th>Concepto</th>
-                <th>Categoría</th>
-                <th>Medio</th>
-                <th class="num">Bruto</th>
-                <th class="num">Comisión</th>
-                <th class="num">Neto</th>
+                <th>Descripción</th>
+                <th>Tipo</th>
+                <th class="num">Monto</th>
+                <th>Usuario</th>
+                <th class="num">Impacto</th>
               </tr>
             </thead>
-            <tbody id="resultado-tabla"></tbody>
+            <tbody id="resultado-movs"></tbody>
           </table>
         </div>
       </div>
@@ -3132,7 +3150,7 @@ function renderResultado() {
   `;
 
   // Tabla movimientos
-  const tbody = document.getElementById('resultado-tabla');
+  const tbody = document.getElementById('resultado-movs') || document.getElementById('resultado-tabla');
   if (movMes.length === 0) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">Sin movimientos en este período</td></tr>`;
     return;

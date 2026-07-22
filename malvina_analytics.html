@@ -397,11 +397,32 @@ const SUPA_ROW_ID = 1;
 
 let DB = null;
 let charts = {};
-const MEDIO_NOMBRES = {
-  efectivo:'Efectivo', debito:'Débito Getnet', credito1:'Crédito 1c',
-  credito3:'Crédito 3c Plan Ahora', qr_cuenta:'QR Laucha', qr_credito:'QR Laucha (crédito)',
-  pago_nube_1d:'Pago Nube 1d', pago_nube_3c:'Pago Nube 3c'
+// Fallback estático — se sobreescribe con DB.mediosPago cuando se cargan los datos.
+// Incluye IDs nuevos y legacy para retrocompatibilidad.
+const MEDIO_NOMBRES_FALLBACK = {
+  // Nuevos IDs (v1.10)
+  efectivo:'Efectivo',
+  qr_galicia_cuenta:'QR Galicia dinero en cuenta',
+  qr_galicia_credito:'QR Galicia crédito',
+  transferencia_galicia:'Transferencia Galicia',
+  debito_getnet:'Débito Getnet',
+  credito_getnet_3:'Crédito Getnet 3 cuotas Mi Pyme',
+  credito_getnet_6:'Crédito Getnet 6 cuotas Mi Pyme',
+  pago_nube_transf:'Pago Nube Transferencia',
+  pago_nube_3c:'Pago Nube 3 cuotas sin interés',
+  // Legacy (por si quedaran datos viejos)
+  debito:'Débito Getnet', credito1:'Crédito 1c', credito3:'Crédito 3c Plan Ahora',
+  qr_cuenta:'QR Laucha', qr_credito:'QR Laucha (crédito)', pago_nube_1d:'Pago Nube 1d'
 };
+const MEDIO_NOMBRES = new Proxy({}, {
+  get(_, prop) {
+    if (DB && Array.isArray(DB.mediosPago)) {
+      const mp = DB.mediosPago.find(x => x.id === prop);
+      if (mp) return mp.nombre;
+    }
+    return MEDIO_NOMBRES_FALLBACK[prop];
+  }
+});
 const CHART_COLORS = ['#4ade80','#60a5fa','#fbbf24','#f87171','#a78bfa','#fb923c','#34d399','#f472b6'];
 
 // ============================================================
@@ -1174,7 +1195,16 @@ function answerLocally(msg) {
     const total = ingresos.reduce((s,m)=>s+(m.comision||0),0);
     const { key } = getMesKey();
     const mesCom = ingresos.filter(m=>m.fecha?.startsWith(key)).reduce((s,m)=>s+(m.comision||0),0);
-    return `Total comisiones históricas: **${fmt(total)}**\nEste mes: **${fmt(mesCom)}**\n\nEl mayor costo es crédito 3 cuotas (10,39%) seguido de QR Laucha crédito (5,45%).`;
+    return `Total comisiones históricas: **${fmt(total)}**\nEste mes: **${fmt(mesCom)}**\n\nEl mayor costo corresponde a los créditos Getnet en cuotas (Mi Pyme).`;
+  }
+
+  // IIBB / impuestos
+  if (q.includes('iibb') || q.includes('impuesto') || q.includes('ingresos brutos')) {
+    const totalIibb = ingresos.reduce((s,m)=>s+(m.iibb||0),0);
+    const { key } = getMesKey();
+    const mesIibb = ingresos.filter(m=>m.fecha?.startsWith(key)).reduce((s,m)=>s+(m.iibb||0),0);
+    const impCfg = (DB.impuestos||[]).map(i => `  - ${i.nombre}: ${Number(i.porcentaje).toFixed(2)}%`).join('\n');
+    return `Total IIBB / impuestos históricos: **${fmt(totalIibb)}**\nEste mes: **${fmt(mesIibb)}**\n\nImpuestos configurados:\n${impCfg || '  (sin impuestos configurados)'}`;
   }
 
   // Medio de pago más usado
@@ -1264,6 +1294,9 @@ function buildContext() {
   const vBrutas = ingresos.reduce((s,m)=>s+m.monto,0);
   const vNetas = ingresos.reduce((s,m)=>s+(m.neto||m.monto),0);
   const comisiones = ingresos.reduce((s,m)=>s+(m.comision||0),0);
+  const iibbTotal = ingresos.reduce((s,m)=>s+(m.iibb||0),0);
+  const impuestosCfg = (DB.impuestos||[]).map(i => `${i.nombre} (${Number(i.porcentaje).toFixed(2)}%)`).join(', ') || 'sin impuestos configurados';
+  const mediosConIibb = (DB.mediosPago||[]).filter(mp => mp.aplicaImpuestos).map(mp => mp.nombre).join(', ') || 'ninguno';
 
   // Por medio
   const porMedio = {};
@@ -1316,6 +1349,9 @@ function buildContext() {
 Total ventas brutas históricas: ${fmt(vBrutas)}
 Total ventas netas históricas: ${fmt(vNetas)}
 Total comisiones pagadas: ${fmt(comisiones)}
+Total IIBB / impuestos: ${fmt(iibbTotal)}
+Impuestos configurados: ${impuestosCfg}
+Medios de pago con IIBB: ${mediosConIibb}
 Mejor día de ventas: ${mejorDia?`${mejorDia[0]} con ${fmt(mejorDia[1])}`:'sin datos'}
 
 Ventas por medio de pago (histórico):

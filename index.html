@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1.9.0 -->
+<!-- v1.10.0 -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -796,37 +796,7 @@
           <div class="card-title">Cierre rápido del día</div>
           <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Ingresá el total vendido por cada medio. Podés cambiar la fecha arriba a la derecha si estás cargando un día anterior.</div>
 
-          <div style="display:flex;flex-direction:column;gap:10px">
-            <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center">
-              <label style="font-size:13px;color:var(--text2);font-weight:500">💵 Efectivo <span style="font-size:11px;color:var(--success);font-weight:400">(desc. 10% al cliente)</span></label>
-              <input type="number" class="form-input" id="cierre-efectivo" placeholder="0" oninput="updateCierrePreview()">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center">
-              <label style="font-size:13px;color:var(--text2);font-weight:500">📱 QR Laucha <span style="font-size:11px;color:var(--success);font-weight:400">(desc. 5% al cliente)</span></label>
-              <input type="number" class="form-input" id="cierre-qr" placeholder="0" oninput="updateCierrePreview()">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center">
-              <label style="font-size:13px;color:var(--text2);font-weight:500">💳 Débito Getnet</label>
-              <input type="number" class="form-input" id="cierre-debito" placeholder="0" oninput="updateCierrePreview()">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center">
-              <label style="font-size:13px;color:var(--text2);font-weight:500">💳 Crédito 1 cuota</label>
-              <input type="number" class="form-input" id="cierre-credito1" placeholder="0" oninput="updateCierrePreview()">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center">
-              <label style="font-size:13px;color:var(--text2);font-weight:500">💳 Crédito 3 cuotas Plan Cuotas Mi Pyme</label>
-              <input type="number" class="form-input" id="cierre-credito3" placeholder="0" oninput="updateCierrePreview()">
-            </div>
-            <hr style="border:none;border-top:1px solid var(--border);margin:4px 0">
-            <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center">
-              <label style="font-size:13px;color:var(--text2);font-weight:500">🌐 Pago Nube (web — retiro 1 día)</label>
-              <input type="number" class="form-input" id="cierre-pagonube1" placeholder="0" oninput="updateCierrePreview()">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center">
-              <label style="font-size:13px;color:var(--text2);font-weight:500">🌐 Pago Nube (web — 3 cuotas)</label>
-              <input type="number" class="form-input" id="cierre-pagonube3" placeholder="0" oninput="updateCierrePreview()">
-            </div>
-          </div>
+          <div id="cierre-medios-container" style="display:flex;flex-direction:column;gap:10px"></div>
 
           <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
 
@@ -863,16 +833,7 @@
             <div id="pago-simple-section">
             <div class="form-group">
               <label class="form-label">Medio de pago</label>
-              <select class="form-select" id="venta-medio" onchange="updateVentaPreview()">
-                <option value="efectivo">💵 Efectivo</option>
-                <option value="qr_cuenta">📱 QR Laucha — dinero en cuenta</option>
-                <option value="qr_credito">📱 QR Laucha — crédito</option>
-                <option value="debito">💳 Débito Getnet</option>
-                <option value="credito1">💳 Crédito 1 cuota Getnet</option>
-                <option value="credito3">💳 Crédito 3 cuotas Mi Pyme</option>
-                <option value="pago_nube_1d">🌐 Pago Nube / Transferencia</option>
-                <option value="pago_nube_3c">🌐 Pago Nube 3 cuotas</option>
-              </select>
+              <select class="form-select" id="venta-medio" onchange="updateVentaPreview()"></select>
             </div>
             <div class="form-group">
               <label class="form-label">Descuento al cliente</label>
@@ -917,13 +878,7 @@
                   <div><label class="form-label">Monto ($)</label>
                     <input type="number" class="form-input" id="mixto-monto1" placeholder="0" oninput="updateVentaPreview()"></div>
                   <div><label class="form-label">Medio</label>
-                    <select class="form-select" id="mixto-medio1" onchange="updateVentaPreview()">
-                      <option value="efectivo">💵 Efectivo</option>
-                      <option value="qr_cuenta">📱 QR Laucha</option>
-                      <option value="debito">💳 Débito</option>
-                      <option value="credito1">💳 Crédito 1c</option>
-                      <option value="credito3">💳 Crédito 3c Mi Pyme</option>
-                    </select></div>
+                    <select class="form-select" id="mixto-medio1" onchange="updateVentaPreview()"></select></div>
                 </div>
                 <div style="display:flex;gap:8px;align-items:center">
                   <select class="form-select" id="mixto-desc-tipo1" onchange="updateVentaPreview()" style="flex:1">
@@ -941,13 +896,7 @@
                   <div><label class="form-label">Monto ($)</label>
                     <input type="number" class="form-input" id="mixto-monto2" placeholder="0" oninput="updateVentaPreview()"></div>
                   <div><label class="form-label">Medio</label>
-                    <select class="form-select" id="mixto-medio2" onchange="updateVentaPreview()">
-                      <option value="qr_cuenta">📱 QR Laucha</option>
-                      <option value="efectivo">💵 Efectivo</option>
-                      <option value="debito">💳 Débito</option>
-                      <option value="credito1">💳 Crédito 1c</option>
-                      <option value="credito3">💳 Crédito 3c Mi Pyme</option>
-                    </select></div>
+                    <select class="form-select" id="mixto-medio2" onchange="updateVentaPreview()"></select></div>
                 </div>
                 <div style="display:flex;gap:8px;align-items:center">
                   <select class="form-select" id="mixto-desc-tipo2" onchange="updateVentaPreview()" style="flex:1">
@@ -966,34 +915,9 @@
           </div>
           <div class="card">
             <div class="card-title">Descuentos estándar por medio</div>
-            <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
-              <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--success-light);border:1px solid #1a3d28;border-radius:var(--radius-sm)">
-                <span style="color:var(--success);font-weight:500">💵 Efectivo</span>
-                <span style="font-family:var(--mono);color:var(--success)">10% off al cliente</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
-                <span style="color:var(--accent);font-weight:500">📱 QR Laucha</span>
-                <span style="font-family:var(--mono);color:var(--accent)">5% off al cliente</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
-                <span style="color:var(--info);font-weight:500">💳 Débito Getnet</span>
-                <span style="font-family:var(--mono);color:var(--text3)">Sin descuento</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
-                <span style="color:var(--info);font-weight:500">💳 Crédito 1 cuota</span>
-                <span style="font-family:var(--mono);color:var(--text3)">Sin descuento</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
-                <span style="color:var(--orange);font-weight:500">💳 Crédito 3c Mi Pyme</span>
-                <span style="font-family:var(--mono);color:var(--text3)">Sin descuento</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)">
-                <span style="color:var(--warning);font-weight:500">🌐 Pago Nube / Transf.</span>
-                <span style="font-family:var(--mono);color:var(--warning)">10% off al cliente</span>
-              </div>
-            </div>
+            <div id="desc-estandar-list" style="display:flex;flex-direction:column;gap:8px;font-size:13px"></div>
             <div style="margin-top:14px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm);font-size:12px;color:var(--text3)">
-              💡 Podés sobrescribir el descuento estándar eligiendo "% personalizado" o "Monto fijo" para cada venta.
+              💡 Podés sobrescribir el descuento estándar eligiendo "% personalizado" o "Monto fijo" para cada venta. Los porcentajes se configuran en Configuración → Medios de pago.
             </div>
           </div>
         </div>
@@ -1014,6 +938,7 @@
                   <th class="num">Bruto</th>
                   <th class="num">Desc. cliente</th>
                   <th class="num">Comisión</th>
+                  <th class="num">IIBB</th>
                   <th class="num">Neto real</th>
                   <th>Usuario</th>
                   <th></th>
@@ -1163,7 +1088,10 @@
           <div class="page-title">Proveedores y compras</div>
           <div class="page-sub">Control de deudas y pagos</div>
         </div>
-        <button class="btn btn-primary" onclick="openModal('modal-compra')">+ Registrar compra</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select class="form-select" id="prov-mes-sel" style="width:200px" onchange="renderProveedores()"></select>
+          <button class="btn btn-primary" onclick="openModal('modal-compra')">+ Registrar compra</button>
+        </div>
       </div>
 
       <div class="grid-4 mb-20" id="prov-kpis"></div>
@@ -1268,7 +1196,10 @@
           <div class="page-title">Devoluciones y cambios</div>
           <div class="page-sub">Registrá devoluciones de dinero y cambios de productos</div>
         </div>
-        <button class="btn btn-primary" onclick="openModal('modal-devolucion')">+ Nueva devolución</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select class="form-select" id="dev-mes-sel" style="width:200px" onchange="renderDevoluciones()"></select>
+          <button class="btn btn-primary" onclick="openModal('modal-devolucion')">+ Nueva devolución</button>
+        </div>
       </div>
 
       <div class="grid-3 mb-20" id="dev-kpis"></div>
@@ -1396,6 +1327,7 @@
       <div class="tabs">
         <div class="tab active" onclick="configTab('usuarios')">Usuarios</div>
         <div class="tab" onclick="configTab('medios')">Medios de pago</div>
+        <div class="tab" onclick="configTab('impuestos')">Impuestos</div>
         <div class="tab" onclick="configTab('sistema')">Sistema</div>
       </div>
 
@@ -1416,16 +1348,58 @@
       </div>
 
       <div class="tab-panel" id="tab-medios">
+        <div class="flex-end mb-16">
+          <button class="btn btn-primary" onclick="abrirModalMedio()">+ Agregar medio de pago</button>
+        </div>
         <div class="card">
-          <div class="card-title">Comisiones por medio de pago</div>
+          <div class="card-title">Medios de pago configurados</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">
+            Podés editar el nombre, la comisión, el descuento estándar al cliente, y si aplica IIBB (u otros impuestos configurados). Los cambios se reflejan en toda la app.
+          </div>
           <div class="table-wrap">
             <table>
               <thead>
-                <tr><th>Medio</th><th class="num">Comisión (%)</th><th>Descripción</th><th></th></tr>
+                <tr>
+                  <th>Medio</th>
+                  <th class="num">Comisión (%)</th>
+                  <th class="num">Desc. cliente (%)</th>
+                  <th>Aplica IIBB</th>
+                  <th>Descripción</th>
+                  <th></th>
+                </tr>
               </thead>
               <tbody id="medios-tabla"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-impuestos">
+        <div class="flex-end mb-16">
+          <button class="btn btn-primary" onclick="abrirModalImpuesto()">+ Agregar impuesto</button>
+        </div>
+        <div class="card mb-16">
+          <div class="card-title">Impuestos configurados</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">
+            Estos impuestos se aplican a las operaciones cuyos medios de pago tengan marcado "Aplica IIBB". El porcentaje se puede modificar cuando cambie (por ejemplo, al cambiar de mes). Cada operación registrada guarda el porcentaje vigente al momento de la carga.
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th class="num">Porcentaje (%)</th>
+                  <th>Descripción</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="impuestos-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Medios de pago que aplican estos impuestos</div>
+          <div id="impuestos-medios-aplican" style="font-size:13px;color:var(--text2)"></div>
         </div>
       </div>
 
@@ -1470,14 +1444,7 @@
     </div>
     <div class="form-group" id="mov-medio-group">
       <label class="form-label">Medio de pago</label>
-      <select class="form-select" id="mov-medio" onchange="updateComision()">
-        <option value="efectivo">Efectivo</option>
-        <option value="debito">Débito Getnet</option>
-        <option value="credito1">Crédito 1 cuota Getnet</option>
-        <option value="credito3">Crédito 3 cuotas Plan Cuotas Mi Pyme</option>
-        <option value="qr_cuenta">QR Laucha (dinero en cuenta)</option>
-        <option value="qr_credito">QR Laucha (crédito)</option>
-      </select>
+      <select class="form-select" id="mov-medio" onchange="updateComision()"></select>
     </div>
     <div class="form-group">
       <label class="form-label">Monto bruto</label>
@@ -1752,14 +1719,7 @@
     <div class="grid-2" style="gap:12px">
       <div class="form-group">
         <label class="form-label">Medio de pago original <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
-        <select class="form-select" id="dev-medio-original">
-          <option value="efectivo">Efectivo</option>
-          <option value="debito">Débito Getnet</option>
-          <option value="credito1">Crédito 1 cuota</option>
-          <option value="credito3">Crédito 3 cuotas</option>
-          <option value="qr_cuenta">QR Laucha</option>
-          <option value="pago_nube_1d">Transferencia / Pago Nube</option>
-        </select>
+        <select class="form-select" id="dev-medio-original"></select>
       </div>
       <div class="form-group">
         <label class="form-label">Monto de la venta original ($)</label>
@@ -1878,14 +1838,74 @@
   </div>
 </div>
 
-<!-- Modal: Novedades del día (popup automático) -->
+<!-- Modal: Novedades no leídas (popup automático al login) -->
 <div class="modal-overlay" id="modal-novedades-hoy">
-  <div class="modal" style="width:500px">
-    <div class="modal-title">📝 Novedades de hoy</div>
+  <div class="modal" style="width:520px">
+    <div class="modal-title">📝 Novedades sin leer</div>
     <div id="modal-novedades-hoy-content"></div>
     <div class="flex-end" style="margin-top:16px">
       <button class="btn btn-secondary" onclick="closeModal('modal-novedades-hoy')">Cerrar</button>
-      <button class="btn btn-primary" onclick="closeModal('modal-novedades-hoy');goTo('novedades')">Ver todas</button>
+      <button class="btn btn-primary" onclick="closeModal('modal-novedades-hoy');goTo('novedades')">Ir a novedades</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Medio de pago (nuevo/editar) -->
+<div class="modal-overlay" id="modal-medio">
+  <div class="modal" style="width:460px">
+    <div class="modal-title" id="modal-medio-title">Agregar medio de pago</div>
+    <input type="hidden" id="medio-edit-id">
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input type="text" class="form-input" id="medio-nombre" placeholder="Ej: QR Galicia dinero en cuenta">
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Comisión (%)</label>
+        <input type="number" step="0.01" min="0" max="100" class="form-input" id="medio-comision" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Desc. estándar al cliente (%)</label>
+        <input type="number" step="0.01" min="0" max="100" class="form-input" id="medio-desc-cliente" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
+        <input type="checkbox" id="medio-aplica-impuestos">
+        <span>Aplica IIBB (y otros impuestos configurados)</span>
+      </label>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descripción / notas (opcional)</label>
+      <input type="text" class="form-input" id="medio-desc" placeholder="Ej: +IVA sobre comisión">
+    </div>
+    <div class="flex-end">
+      <button class="btn btn-secondary" onclick="closeModal('modal-medio')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMedioPago()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Impuesto (nuevo/editar) -->
+<div class="modal-overlay" id="modal-impuesto">
+  <div class="modal" style="width:420px">
+    <div class="modal-title" id="modal-impuesto-title">Agregar impuesto</div>
+    <input type="hidden" id="impuesto-edit-id">
+    <div class="form-group">
+      <label class="form-label">Nombre</label>
+      <input type="text" class="form-input" id="impuesto-nombre" placeholder="Ej: IIBB">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Porcentaje (%)</label>
+      <input type="number" step="0.01" min="0" max="100" class="form-input" id="impuesto-porcentaje" placeholder="Ej: 3">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descripción (opcional)</label>
+      <input type="text" class="form-input" id="impuesto-desc" placeholder="Ej: Ingresos Brutos">
+    </div>
+    <div class="flex-end">
+      <button class="btn btn-secondary" onclick="closeModal('modal-impuesto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveImpuesto()">Guardar</button>
     </div>
   </div>
 </div>
@@ -1932,14 +1952,18 @@ const DEFAULT_DATA = {
     { id: 3, nombre: 'Empleado 1', rol: 'empleado', pass: 'emp2024', activo: true }
   ],
   mediosPago: [
-    { id: 'efectivo', nombre: 'Efectivo', comision: 0, desc: 'Sin comisión' },
-    { id: 'debito', nombre: 'Débito Getnet', comision: 0.01, desc: '~0% real' },
-    { id: 'credito1', nombre: 'Crédito 1 cuota Getnet', comision: 2.42, desc: 'Arancel 2% + IVA' },
-    { id: 'credito3', nombre: 'Crédito 3c Mi Pyme', comision: 10.39, desc: 'Arancel + Costo Fin + IVAs' },
-    { id: 'qr_cuenta', nombre: 'QR Laucha (dinero en cuenta)', comision: 0.97, desc: 'Incluye IVA del costo' },
-    { id: 'qr_credito', nombre: 'QR Laucha (crédito)', comision: 5.45, desc: 'Visa/Mastercard crédito' },
-    { id: 'pago_nube_1d', nombre: 'Pago Nube (retiro 1 día)', comision: 5.89, desc: '+IVA sobre comisión' },
-    { id: 'pago_nube_3c', nombre: 'Pago Nube (3 cuotas s/i)', comision: 7.98, desc: '+IVA sobre comisión' }
+    { id: 'efectivo',           nombre: 'Efectivo',                              comision: 0,     descCliente: 10, aplicaImpuestos: false, desc: 'Descuento 10% al cliente' },
+    { id: 'qr_galicia_cuenta',  nombre: 'QR Galicia dinero en cuenta',           comision: 0,     descCliente: 5,  aplicaImpuestos: false, desc: 'Descuento 5% al cliente' },
+    { id: 'qr_galicia_credito', nombre: 'QR Galicia crédito',                    comision: 5.45,  descCliente: 0,  aplicaImpuestos: false, desc: 'Visa/Mastercard crédito' },
+    { id: 'transferencia_galicia', nombre: 'Transferencia Galicia',              comision: 0,     descCliente: 10, aplicaImpuestos: false, desc: 'Descuento 10% al cliente' },
+    { id: 'debito_getnet',      nombre: 'Débito Getnet',                         comision: 0.01,  descCliente: 0,  aplicaImpuestos: true,  desc: '~0% real (aplica IIBB)' },
+    { id: 'credito_getnet_3',   nombre: 'Crédito Getnet 3 cuotas Mi Pyme',       comision: 10.39, descCliente: 0,  aplicaImpuestos: true,  desc: 'Arancel + Costo Fin + IVAs (aplica IIBB)' },
+    { id: 'credito_getnet_6',   nombre: 'Crédito Getnet 6 cuotas Mi Pyme',       comision: 15.50, descCliente: 0,  aplicaImpuestos: true,  desc: 'Arancel + Costo Fin + IVAs (aplica IIBB)' },
+    { id: 'pago_nube_transf',   nombre: 'Pago Nube Transferencia',               comision: 5.89,  descCliente: 10, aplicaImpuestos: true,  desc: '+IVA sobre comisión (aplica IIBB)' },
+    { id: 'pago_nube_3c',       nombre: 'Pago Nube 3 cuotas sin interés',        comision: 7.98,  descCliente: 0,  aplicaImpuestos: true,  desc: '+IVA sobre comisión (aplica IIBB)' }
+  ],
+  impuestos: [
+    { id: 'iibb', nombre: 'IIBB', porcentaje: 3, descripcion: 'Ingresos Brutos' }
   ],
   gastosFijos: [],
   catalogoGastos: [
@@ -2006,6 +2030,8 @@ async function loadDB() {
         if (!DB.config) DB.config = JSON.parse(JSON.stringify(DEFAULT_DATA.config));
         if (!DB.proveedores) DB.proveedores = JSON.parse(JSON.stringify(DEFAULT_DATA.proveedores));
         if (!DB.mediosPago) DB.mediosPago = JSON.parse(JSON.stringify(DEFAULT_DATA.mediosPago));
+        if (!DB.impuestos) DB.impuestos = JSON.parse(JSON.stringify(DEFAULT_DATA.impuestos));
+        migrarMediosPago();
         console.log('✅ Datos cargados desde Supabase');
         return;
       }
@@ -2027,6 +2053,8 @@ async function loadDB() {
       if (!DB.config) DB.config = JSON.parse(JSON.stringify(DEFAULT_DATA.config));
       if (!DB.proveedores) DB.proveedores = JSON.parse(JSON.stringify(DEFAULT_DATA.proveedores));
       if (!DB.mediosPago) DB.mediosPago = JSON.parse(JSON.stringify(DEFAULT_DATA.mediosPago));
+      if (!DB.impuestos) DB.impuestos = JSON.parse(JSON.stringify(DEFAULT_DATA.impuestos));
+      migrarMediosPago();
       console.log('📦 Datos desde localStorage');
       return;
     }
@@ -2167,6 +2195,8 @@ function initApp() {
   populateResultadoSelects();
   populateGastosMesSel();
   populateCompraProv();
+  poblarSelectsMedios();
+  populateDevMesSel();
 
   goTo('dashboard');
   renderAll();
@@ -2520,17 +2550,121 @@ function renderDashboard() {
 // ============================================================
 // CAJA DIARIA
 // ============================================================
-// Descuentos al cliente por medio
-const DESCUENTOS_CLIENTE = {
-  efectivo: 10,       // 10% off al cliente
-  qr_cuenta: 5,       // 5% off al cliente
-  qr_credito: 5,      // 5% off al cliente
-  debito: 0,
-  credito1: 0,
-  credito3: 0,
-  pago_nube_1d: 10,   // 10% off transferencia web
-  pago_nube_3c: 0
+// Migración: renombrar IDs antiguos de medios de pago a los nuevos
+// y asegurar que existan los campos descCliente / aplicaImpuestos.
+const MEDIO_PAGO_MIGRACION = {
+  'debito':       'debito_getnet',
+  'credito1':     'credito_getnet_3',       // aprox: mismo tipo tarjeta
+  'credito3':     'credito_getnet_3',
+  'qr_cuenta':    'qr_galicia_cuenta',
+  'qr_credito':   'qr_galicia_credito',
+  'pago_nube_1d': 'pago_nube_transf'
 };
+
+function migrarMediosPago() {
+  if (!DB.mediosPago) return;
+  // Fusionar defaults: si un medio no existe, agregarlo
+  const idsExistentes = new Set(DB.mediosPago.map(m => m.id));
+  DEFAULT_DATA.mediosPago.forEach(def => {
+    if (!idsExistentes.has(def.id)) DB.mediosPago.push(JSON.parse(JSON.stringify(def)));
+  });
+  // Asegurar campos nuevos
+  DB.mediosPago.forEach(mp => {
+    if (typeof mp.descCliente !== 'number') mp.descCliente = 0;
+    if (typeof mp.aplicaImpuestos !== 'boolean') mp.aplicaImpuestos = false;
+  });
+  // Migrar IDs en movimientos y devoluciones
+  const remap = id => MEDIO_PAGO_MIGRACION[id] || id;
+  (DB.movimientos||[]).forEach(m => { if (m.medio) m.medio = remap(m.medio); });
+  (DB.devoluciones||[]).forEach(d => {
+    if (d.medioOriginal) d.medioOriginal = remap(d.medioOriginal);
+  });
+}
+
+// Devuelve el % de descuento estándar al cliente para un medio (basado en la config actual)
+function getDescClientePct(medioId) {
+  const mp = (DB.mediosPago||[]).find(x => x.id === medioId);
+  return mp ? (mp.descCliente || 0) : 0;
+}
+
+// Suma total de porcentajes de impuestos activos (IIBB + otros)
+function getImpuestosTotalPct() {
+  return (DB.impuestos||[]).reduce((s,i) => s + (Number(i.porcentaje)||0), 0);
+}
+
+// Devuelve monto de impuesto (IIBB u otros) que aplica a una venta, según el medio de pago
+function calcImpuestos(medioId, base) {
+  const mp = (DB.mediosPago||[]).find(x => x.id === medioId);
+  if (!mp || !mp.aplicaImpuestos) return { total: 0, detalle: [] };
+  const detalle = (DB.impuestos||[]).map(i => ({
+    id: i.id, nombre: i.nombre, porcentaje: Number(i.porcentaje)||0,
+    monto: base * (Number(i.porcentaje)||0) / 100
+  }));
+  return { total: detalle.reduce((s,x) => s + x.monto, 0), detalle };
+}
+
+// Pobla todos los <select> de medios de pago del sistema, preservando el valor seleccionado.
+function poblarSelectsMedios() {
+  const targets = [
+    { id: 'venta-medio', includeAll: true },
+    { id: 'mixto-medio1', includeAll: true },
+    { id: 'mixto-medio2', includeAll: true },
+    { id: 'mov-medio', includeAll: true },
+    { id: 'dev-medio-original', includeAll: true }
+  ];
+  targets.forEach(t => {
+    const sel = document.getElementById(t.id);
+    if (!sel) return;
+    const prev = sel.value;
+    sel.innerHTML = (DB.mediosPago||[]).map(mp =>
+      `<option value="${mp.id}">${mp.nombre}</option>`
+    ).join('');
+    if (prev && (DB.mediosPago||[]).some(mp => mp.id === prev)) sel.value = prev;
+  });
+  poblarCierreMedios();
+  poblarDescEstandarList();
+}
+
+// Pobla la lista de descuentos estándar del panel derecho de "Cargar venta"
+function poblarDescEstandarList() {
+  const cont = document.getElementById('desc-estandar-list');
+  if (!cont) return;
+  cont.innerHTML = (DB.mediosPago||[]).map(mp => {
+    const pct = Number(mp.descCliente||0);
+    const bg = pct > 0 ? 'var(--success-light)' : 'var(--surface2)';
+    const border = pct > 0 ? '#1a3d28' : 'var(--border)';
+    const color = pct > 0 ? 'var(--success)' : 'var(--text3)';
+    return `<div style="display:flex;justify-content:space-between;padding:10px 12px;background:${bg};border:1px solid ${border};border-radius:var(--radius-sm)">
+      <span style="color:${pct>0?'var(--success)':'var(--text2)'};font-weight:500">${mp.nombre}</span>
+      <span style="font-family:var(--mono);color:${color}">${pct>0?pct+'% off al cliente':'Sin descuento'}</span>
+    </div>`;
+  }).join('');
+}
+
+// Pobla el bloque de inputs de "Cierre rápido del día" — un input por medio de pago
+function poblarCierreMedios() {
+  const cont = document.getElementById('cierre-medios-container');
+  if (!cont) return;
+  cont.innerHTML = (DB.mediosPago||[]).map(mp => {
+    const pct = Number(mp.descCliente||0);
+    const impLabel = mp.aplicaImpuestos ? ` <span style="font-size:11px;color:var(--danger);font-weight:400">(aplica IIBB)</span>` : '';
+    const descLabel = pct > 0 ? ` <span style="font-size:11px;color:var(--success);font-weight:400">(desc. ${pct}% al cliente)</span>` : '';
+    return `<div style="display:grid;grid-template-columns:1fr 120px;gap:8px;align-items:center">
+      <label style="font-size:13px;color:var(--text2);font-weight:500">${mp.nombre}${descLabel}${impLabel}</label>
+      <input type="number" class="form-input cierre-medio-input" data-medio="${mp.id}" placeholder="0" oninput="updateCierrePreview()">
+    </div>`;
+  }).join('');
+}
+
+// Lee los inputs de cierre y devuelve { medioId: monto }
+function leerValoresCierre() {
+  const vals = {};
+  document.querySelectorAll('.cierre-medio-input').forEach(inp => {
+    const mid = inp.dataset.medio;
+    vals[mid] = parseFloat(inp.value) || 0;
+  });
+  return vals;
+}
 
 function renderCaja() {
   const fecha = document.getElementById('caja-fecha').value || today();
@@ -2551,27 +2685,29 @@ function renderCaja() {
   const totalDevDia = devolucionesDia.reduce((s,m) => s + Math.abs(m.monto), 0);
   const descClienteDia = ventasNormales.reduce((s,m) => s + (m.descCliente||0), 0);
   const comisionesDia = ventasNormales.reduce((s,m) => s + (m.comision||0), 0);
-  const netoDia = brutoDia - totalDevDia - descClienteDia - comisionesDia;
+  const iibbDelDia = ventasNormales.reduce((s,m) => s + (m.iibb||0), 0);
+  const netoDia = brutoDia - totalDevDia - descClienteDia - comisionesDia - iibbDelDia;
   const egresosDia = egresos.reduce((s,m) => s + m.monto, 0);
 
+  const iibbDia = iibbDelDia;
   document.getElementById('caja-kpis').innerHTML = `
     <div class="kpi"><div class="kpi-label">Bruto cobrado</div><div class="kpi-value">${fmtC(brutoDia)}</div><div class="kpi-sub">${ventasNormales.length} ventas registradas</div></div>
     <div class="kpi"><div class="kpi-label">Devoluciones del día</div><div class="kpi-value ${totalDevDia>0?'kpi-neg':''}">${fmtC(totalDevDia)}</div><div class="kpi-sub">${devolucionesDia.length} devolucion${devolucionesDia.length!==1?'es':''}</div></div>
-    <div class="kpi"><div class="kpi-label">Comisiones + desc.</div><div class="kpi-value kpi-neg">${fmtC(comisionesDia+descClienteDia)}</div><div class="kpi-sub">Cobro + desc. al cliente</div></div>
+    <div class="kpi"><div class="kpi-label">Comisiones + descuentos</div>
+      <div class="kpi-value kpi-neg">${fmtC(comisionesDia+descClienteDia)}</div>
+      <div class="kpi-sub" style="display:flex;flex-direction:column;gap:2px;margin-top:4px">
+        <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--danger)">Comisiones</span><span style="font-family:var(--mono);color:var(--danger)">${fmtC(comisionesDia)}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--warning)">Desc. cliente</span><span style="font-family:var(--mono);color:var(--warning)">${fmtC(descClienteDia)}</span></div>
+        ${iibbDia>0?`<div style="display:flex;justify-content:space-between;font-size:11px"><span style="color:var(--danger)">IIBB</span><span style="font-family:var(--mono);color:var(--danger)">${fmtC(iibbDia)}</span></div>`:''}
+      </div>
+    </div>
     <div class="kpi"><div class="kpi-label">Neto real del día</div><div class="kpi-value ${netoDia>=0?'kpi-pos':'kpi-neg'}">${fmtC(netoDia)}</div><div class="kpi-sub">Después de todo</div></div>
   `;
 
   // Limpiar campos del cierre si hay cierre ya guardado para este día
   const cierreHoy = movDia.filter(m => m.tipo === 'ingreso' && m.esCierre);
   if (cierreHoy.length > 0) {
-    // Hay cierre guardado — mostrar resumen
-    document.getElementById('cierre-efectivo').value = '';
-    document.getElementById('cierre-qr').value = '';
-    document.getElementById('cierre-debito').value = '';
-    document.getElementById('cierre-credito1').value = '';
-    document.getElementById('cierre-credito3').value = '';
-    document.getElementById('cierre-pagonube1').value = '';
-    document.getElementById('cierre-pagonube3').value = '';
+    document.querySelectorAll('.cierre-medio-input').forEach(inp => { inp.value = ''; });
   }
   updateCierrePreview();
 
@@ -2582,7 +2718,7 @@ function renderCaja() {
   if (!tabla) return;
   const todosMovs = [...DB.movimientos].sort((a,b) => ((b.fecha||'')+(b.hora||'')).localeCompare((a.fecha||'')+(a.hora||'')));
   if (todosMovs.length === 0) {
-    tabla.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Sin registros aún</td></tr>`;
+    tabla.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text3)">Sin registros aún</td></tr>`;
     return;
   }
   tabla.innerHTML = todosMovs.map(m => {
@@ -2595,6 +2731,13 @@ function renderCaja() {
     const montoAbs = Math.abs(m.monto);
     const netoColor = isEgreso||isDevolucion ? 'var(--danger)' : 'var(--success)';
     const notaLabel = m.nota ? `<div style="font-size:11px;color:var(--text3)">${m.nota}</div>` : '';
+    // IIBB: solo aplica a ingresos con medios "aplicaImpuestos" — mostrar % y monto
+    let iibbCell = '—';
+    if (!isEgreso && !isDevolucion && mp?.aplicaImpuestos) {
+      const pct = getImpuestosTotalPct();
+      const monto = m.iibb || 0;
+      iibbCell = `<div>${fmtC(monto)}</div><div style="font-size:10px;color:var(--text3)">${pct.toFixed(2)}%</div>`;
+    }
     return `<tr>
       <td style="font-family:var(--mono);font-size:12px">${m.fecha}<div style="font-size:10px;color:var(--text3)">${m.hora||''}</div></td>
       <td><div>${label}</div>${notaLabel}</td>
@@ -2602,6 +2745,7 @@ function renderCaja() {
       <td class="num">${fmtC(montoAbs)}</td>
       <td class="num" style="color:var(--warning)">${m.descCliente ? fmtC(m.descCliente) : '—'}</td>
       <td class="num" style="color:var(--danger)">${m.comision ? fmtC(m.comision) : '—'}</td>
+      <td class="num" style="color:var(--danger)">${iibbCell}</td>
       <td class="num" style="color:${netoColor}">${isEgreso||isDevolucion ? '−'+fmtC(montoAbs) : fmtC(m.neto||montoAbs)}</td>
       <td style="font-size:12px;color:var(--text3)">${m.usuario||''}</td>
       <td><div class="row-actions">
@@ -2670,7 +2814,7 @@ function toggleMixto() {
 function calcDescParte(tipo, medio, monto, valor) {
   if (tipo === 'ninguno') return { descMonto: 0, label: 'Sin desc.' };
   if (tipo === 'estandar') {
-    const pct = DESCUENTOS_CLIENTE[medio] || 0;
+    const pct = getDescClientePct(medio);
     return { descMonto: monto * pct / 100, label: pct > 0 ? `${pct}% est.` : 'Sin desc.' };
   }
   if (tipo === 'porcentaje') return { descMonto: monto * (valor||0) / 100, label: `${valor||0}%` };
@@ -2693,7 +2837,7 @@ function getDescuentoVenta() {
 
   if (tipo === 'ninguno') return { pct: 0, monto: 0, label: 'Sin descuento' };
   if (tipo === 'estandar') {
-    const pct = DESCUENTOS_CLIENTE[medio] || 0;
+    const pct = getDescClientePct(medio);
     return { pct, monto: monto * pct / 100, label: pct > 0 ? `${pct}% estándar` : 'Sin descuento' };
   }
   if (tipo === 'porcentaje') return { pct: valor, monto: monto * valor / 100, label: `${valor}% personalizado` };
@@ -2735,7 +2879,7 @@ function updateVentaPreview() {
     const m1 = parseFloat(document.getElementById('mixto-monto1')?.value||'0')||0;
     const m2 = parseFloat(document.getElementById('mixto-monto2')?.value||'0')||0;
     const med1 = document.getElementById('mixto-medio1')?.value || 'efectivo';
-    const med2 = document.getElementById('mixto-medio2')?.value || 'qr_cuenta';
+    const med2 = document.getElementById('mixto-medio2')?.value || 'qr_galicia_cuenta';
     const dt1 = document.getElementById('mixto-desc-tipo1')?.value || 'estandar';
     const dt2 = document.getElementById('mixto-desc-tipo2')?.value || 'estandar';
     const dv1 = parseFloat(document.getElementById('mixto-desc-val1')?.value||'0')||0;
@@ -2795,12 +2939,14 @@ function guardarVenta() {
     const desc = getDescuentoVenta();
     const cobrado = Math.max(lista - desc.monto, 0);
     const comision = cobrado * (mp?.comision||0) / 100;
-    const neto = cobrado - comision;
+    const imp = calcImpuestos(medio, cobrado);
+    const neto = cobrado - comision - imp.total;
     DB.movimientos.push({
       id: uid(), tipo: 'ingreso', esCierre: false,
       medio, concepto, nota,
       monto: lista, descCliente: desc.monto, descPct: desc.pct,
-      comision, neto, fecha, hora,
+      comision, iibb: imp.total, impuestos: imp.detalle,
+      neto, fecha, hora,
       usuario: currentUser?.nombre || ''
     });
   } else {
@@ -2809,7 +2955,7 @@ function guardarVenta() {
     const m1 = parseFloat(document.getElementById('mixto-monto1')?.value||'0')||0;
     const m2 = parseFloat(document.getElementById('mixto-monto2')?.value||'0')||0;
     const med1 = document.getElementById('mixto-medio1')?.value || 'efectivo';
-    const med2 = document.getElementById('mixto-medio2')?.value || 'qr_cuenta';
+    const med2 = document.getElementById('mixto-medio2')?.value || 'qr_galicia_cuenta';
     const dt1 = document.getElementById('mixto-desc-tipo1')?.value || 'estandar';
     const dt2 = document.getElementById('mixto-desc-tipo2')?.value || 'estandar';
     const dv1 = parseFloat(document.getElementById('mixto-desc-val1')?.value||'0')||0;
@@ -2820,10 +2966,13 @@ function guardarVenta() {
       const d = calcDescParte(dt, med, m, dv);
       const cob = Math.max(m-d.descMonto,0);
       const com = cob*(mp?.comision||0)/100;
+      const imp = calcImpuestos(med, cob);
       DB.movimientos.push({
         id: uid(), tipo: 'ingreso', esCierre: false, grupoId, mixto: true,
         medio: med, concepto: `${concepto} (parte ${n})`, nota,
-        monto: m, descCliente: d.descMonto, comision: com, neto: cob-com,
+        monto: m, descCliente: d.descMonto, comision: com,
+        iibb: imp.total, impuestos: imp.detalle,
+        neto: cob-com-imp.total,
         fecha, hora, usuario: currentUser?.nombre || ''
       });
     });
@@ -2859,45 +3008,33 @@ function guardarVenta() {
 }
 
 function updateCierrePreview() {
-  const vals = {
-    efectivo:    parseFloat(document.getElementById('cierre-efectivo')?.value)||0,
-    qr_cuenta:   parseFloat(document.getElementById('cierre-qr')?.value)||0,
-    debito:      parseFloat(document.getElementById('cierre-debito')?.value)||0,
-    credito1:    parseFloat(document.getElementById('cierre-credito1')?.value)||0,
-    credito3:    parseFloat(document.getElementById('cierre-credito3')?.value)||0,
-    pago_nube_1d:parseFloat(document.getElementById('cierre-pagonube1')?.value)||0,
-    pago_nube_3c:parseFloat(document.getElementById('cierre-pagonube3')?.value)||0
-  };
+  const vals = leerValoresCierre();
 
-  const nombres = {
-    efectivo:'Efectivo', qr_cuenta:'QR Laucha',
-    debito:'Débito Getnet', credito1:'Crédito 1 cuota',
-    credito3:'Crédito 3 cuotas', pago_nube_1d:'Pago Nube 1d',
-    pago_nube_3c:'Pago Nube 3c'
-  };
-
-  let totalBruto=0, totalDesc=0, totalComision=0, totalNeto=0;
+  let totalBruto=0, totalDesc=0, totalComision=0, totalIibb=0, totalNeto=0;
   let rows = '';
 
   for (const [mid, bruto] of Object.entries(vals)) {
     if (bruto <= 0) continue;
     const mp = DB.mediosPago.find(x => x.id === mid);
-    const pctDesc = DESCUENTOS_CLIENTE[mid] || 0;
+    const pctDesc = getDescClientePct(mid);
     const descCliente = bruto * pctDesc / 100;
     const baseComision = bruto - descCliente;
     const comision = baseComision * (mp?.comision||0) / 100;
-    const neto = baseComision - comision;
+    const imp = calcImpuestos(mid, baseComision);
+    const neto = baseComision - comision - imp.total;
 
     totalBruto += bruto;
     totalDesc += descCliente;
     totalComision += comision;
+    totalIibb += imp.total;
     totalNeto += neto;
 
     rows += `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px">
       <div>
-        <div style="font-weight:500">${nombres[mid]}</div>
+        <div style="font-weight:500">${mp?.nombre||mid}</div>
         ${pctDesc>0?`<div style="font-size:11px;color:var(--warning)">−${pctDesc}% al cliente = −${fmtC(descCliente)}</div>`:''}
         ${mp?.comision>0?`<div style="font-size:11px;color:var(--danger)">Comisión ${mp.comision}% = −${fmtC(comision)}</div>`:''}
+        ${imp.total>0?`<div style="font-size:11px;color:var(--danger)">IIBB ${getImpuestosTotalPct().toFixed(2)}% = −${fmtC(imp.total)}</div>`:''}
       </div>
       <div style="text-align:right">
         <div style="font-family:var(--mono)">${fmtC(bruto)}</div>
@@ -2916,7 +3053,8 @@ function updateCierrePreview() {
     <div style="margin-top:12px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm)">
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Bruto total</span><span style="font-family:var(--mono)">${fmtC(totalBruto)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Descuentos al cliente</span><span style="font-family:var(--mono);color:var(--warning)">−${fmtC(totalDesc)}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span style="color:var(--text2)">Comisiones cobro</span><span style="font-family:var(--mono);color:var(--danger)">−${fmtC(totalComision)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:var(--text2)">Comisiones cobro</span><span style="font-family:var(--mono);color:var(--danger)">−${fmtC(totalComision)}</span></div>
+      ${totalIibb>0?`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span style="color:var(--text2)">IIBB</span><span style="font-family:var(--mono);color:var(--danger)">−${fmtC(totalIibb)}</span></div>`:''}
       <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:600"><span>Neto real</span><span style="font-family:var(--mono);color:var(--success)">${fmtC(totalNeto)}</span></div>
     </div>`;
 }
@@ -2937,15 +3075,7 @@ function addEgreso() {
 
 function guardarCierre() {
   const fecha = document.getElementById('caja-fecha').value || today();
-  const vals = {
-    efectivo:    parseFloat(document.getElementById('cierre-efectivo')?.value)||0,
-    qr_cuenta:   parseFloat(document.getElementById('cierre-qr')?.value)||0,
-    debito:      parseFloat(document.getElementById('cierre-debito')?.value)||0,
-    credito1:    parseFloat(document.getElementById('cierre-credito1')?.value)||0,
-    credito3:    parseFloat(document.getElementById('cierre-credito3')?.value)||0,
-    pago_nube_1d:parseFloat(document.getElementById('cierre-pagonube1')?.value)||0,
-    pago_nube_3c:parseFloat(document.getElementById('cierre-pagonube3')?.value)||0
-  };
+  const vals = leerValoresCierre();
 
   const hayAlgo = Object.values(vals).some(v => v > 0);
   if (!hayAlgo) { alert('Ingresá al menos un monto para guardar el cierre'); return; }
@@ -2954,16 +3084,17 @@ function guardarCierre() {
   for (const [mid, bruto] of Object.entries(vals)) {
     if (bruto <= 0) continue;
     const mp = DB.mediosPago.find(x => x.id === mid);
-    const pctDesc = DESCUENTOS_CLIENTE[mid] || 0;
+    const pctDesc = getDescClientePct(mid);
     const descCliente = bruto * pctDesc / 100;
     const baseComision = bruto - descCliente;
     const comision = baseComision * (mp?.comision||0) / 100;
-    const neto = baseComision - comision;
+    const imp = calcImpuestos(mid, baseComision);
+    const neto = baseComision - comision - imp.total;
 
     DB.movimientos.push({
       id: uid(), tipo: 'ingreso', esCierre: true,
       medio: mid, concepto: `Cierre ${mid}`,
-      monto: bruto, descCliente, comision, neto, fecha,
+      monto: bruto, descCliente, comision, iibb: imp.total, impuestos: imp.detalle, neto, fecha,
       hora: new Date().toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' }),
       usuario: currentUser?.nombre || ''
     });
@@ -2988,10 +3119,7 @@ function guardarCierre() {
   saveDB();
 
   // Limpiar formulario
-  ['cierre-efectivo','cierre-qr','cierre-debito','cierre-credito1','cierre-credito3','cierre-pagonube1','cierre-pagonube3'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
+  document.querySelectorAll('.cierre-medio-input').forEach(inp => { inp.value = ''; });
   document.getElementById('cierre-egresos-list').innerHTML = '';
 
   renderCaja();
@@ -3106,23 +3234,27 @@ function renderResultado() {
   const ventasBrutas = ingresos.filter(m=>m.monto>0).reduce((s,m) => s + m.monto, 0);
   const totalDevueltoMes = ingresos.filter(m=>m.monto<0&&m.esDevolucion).reduce((s,m) => s + Math.abs(m.monto), 0);
   const comisiones = ingresos.filter(m=>m.monto>0).reduce((s,m) => s + (m.comision||0), 0);
-  const ventasNetas = ventasBrutas - totalDevueltoMes - comisiones;
+  const iibbMes = ingresos.filter(m=>m.monto>0).reduce((s,m) => s + (m.iibb||0), 0);
+  const descClienteMes = ingresos.filter(m=>m.monto>0).reduce((s,m) => s + (m.descCliente||0), 0);
+  const ventasNetas = ventasBrutas - totalDevueltoMes - comisiones - iibbMes - descClienteMes;
   const otrosEgresos = egresos.reduce((s,m) => s + m.monto, 0);
-  const gastosFijosTotal = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&g.fecha).reduce((s,g) => s+g.monto, 0);
-  const gastosFijosPendRes = (DB.gastosFijos||[]).filter(g=>g.mesKey===mesKey&&!g.cancelado&&!g.fecha).reduce((s,g) => s+g.monto, 0);
-  // Compras: usar fechaPago como referencia del mes, no fecha de compra
-  const totalCompras = 0; // ya no se usa directamente
-  const totalProgramado = 0; // ya no se usa directamente
 
-  // Compras pagadas y por pagar este mes
+  // Gastos fijos del mes (solo del mes seleccionado — bugfix)
+  const gastosDelMes = (DB.gastosFijos||[]).filter(g => g.mesKey === mesKey && !g.cancelado);
+  const gastosFijosPagados = gastosDelMes.filter(g => g.fecha).reduce((s,g) => s + g.monto, 0);
+  const gastosFijosPorPagar = gastosDelMes.filter(g => !g.fecha).reduce((s,g) => s + g.monto, 0);
+
+  // Compras pagadas y por pagar este mes (por fechaPago)
   const comprasPagadasMes = (DB.compras||[]).filter(c => c.pagado && c.fechaPago?.startsWith(mesKey)).reduce((s,c)=>s+c.monto,0);
   const comprasPorPagarMes = (DB.compras||[]).filter(c => !c.pagado && c.fechaPago?.startsWith(mesKey)).reduce((s,c)=>s+c.monto,0);
-  const resultado = ventasNetas - gastosFijosTotal - gastosFijosPendRes - otrosEgresos - comprasPagadasMes - comprasPorPagarMes - totalDevueltoMes;
+
+  const totalEgresosMes = gastosFijosPagados + gastosFijosPorPagar + comprasPagadasMes + comprasPorPagarMes + otrosEgresos;
+  const resultado = ventasNetas - totalEgresosMes;
 
   document.getElementById('resultado-kpis').innerHTML = `
     <div class="kpi"><div class="kpi-label">Ventas brutas</div><div class="kpi-value">${fmtC(ventasBrutas)}</div><div class="kpi-sub">${ingresos.filter(m=>m.monto>0).length} ventas registradas</div></div>
-    <div class="kpi"><div class="kpi-label">Ventas netas</div><div class="kpi-value">${fmtC(ventasNetas)}</div><div class="kpi-sub">Comisiones: ${fmtC(comisiones)}</div></div>
-    <div class="kpi"><div class="kpi-label">Egresos del período</div><div class="kpi-value kpi-neg">${fmtC(gastosFijosTotal+gastosFijosPendRes+comprasPagadasMes+comprasPorPagarMes+otrosEgresos)}</div><div class="kpi-sub">${comprasPorPagarMes>0?'Incl. '+fmtC(comprasPorPagarMes)+' por pagar':''}</div></div>
+    <div class="kpi"><div class="kpi-label">Ventas netas</div><div class="kpi-value">${fmtC(ventasNetas)}</div><div class="kpi-sub">Comisiones: ${fmtC(comisiones)}${iibbMes>0?' · IIBB: '+fmtC(iibbMes):''}</div></div>
+    <div class="kpi"><div class="kpi-label">Egresos del período</div><div class="kpi-value kpi-neg">${fmtC(totalEgresosMes)}</div><div class="kpi-sub">${comprasPorPagarMes+gastosFijosPorPagar>0?'Incl. '+fmtC(comprasPorPagarMes+gastosFijosPorPagar)+' por pagar':'Sin deuda'}</div></div>
     <div class="kpi"><div class="kpi-label">Resultado del período</div><div class="kpi-value ${resultado>=0?'kpi-pos':'kpi-neg'}">${fmtC(resultado)}</div><div class="kpi-sub">${resultado>=0?'Ganancia estimada':'Pérdida estimada'}</div></div>
   `;
 
@@ -3152,14 +3284,41 @@ function renderResultado() {
     <tbody>${mediosRows}</tbody></table>
   ` : '<div class="empty-state"><div class="empty-sub">Sin ventas en este período</div></div>';
 
-  // Costos
+  // Egresos del período — desglose solicitado
   document.getElementById('resultado-costos').innerHTML = `
     <div style="font-size:13px">
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Gastos del mes</span><span style="font-family:var(--mono)">${fmtC(gastosFijosTotal)}</span></div>
-
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Devoluciones a clientes</span><span style="font-family:var(--mono);color:var(--warning)">${fmtC(totalDevueltoMes)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2)">Otros egresos</span><span style="font-family:var(--mono)">${fmtC(otrosEgresos)}</span></div>
-
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">Ventas brutas</span>
+        <span style="font-family:var(--mono);color:var(--success)">${fmtC(ventasBrutas)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">Ventas netas</span>
+        <span style="font-family:var(--mono);color:var(--success)">${fmtC(ventasNetas)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">Egreso gastos fijos pagos</span>
+        <span style="font-family:var(--mono);color:var(--danger)">${fmtC(gastosFijosPagados)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">Egreso gastos fijos por pagar</span>
+        <span style="font-family:var(--mono);color:var(--warning)">${fmtC(gastosFijosPorPagar)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">Egreso compra mercadería abonado</span>
+        <span style="font-family:var(--mono);color:var(--danger)">${fmtC(comprasPagadasMes)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">Egreso compra mercadería por pagar del mes</span>
+        <span style="font-family:var(--mono);color:var(--warning)">${fmtC(comprasPorPagarMes)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <span style="color:var(--text2)">Devoluciones a clientes</span>
+        <span style="font-family:var(--mono);color:var(--warning)">${fmtC(totalDevueltoMes)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0">
+        <span style="color:var(--text2)">Otros egresos de caja</span>
+        <span style="font-family:var(--mono);color:var(--danger)">${fmtC(otrosEgresos)}</span>
+      </div>
     </div>
   `;
 
@@ -3186,8 +3345,8 @@ function renderResultado() {
     });
   });
 
-  // Gastos del mes (pagados y pendientes)
-  gastosMes.forEach(g => {
+  // Gastos del mes (pagados y pendientes) — solo del mes seleccionado
+  gastosDelMes.forEach(g => {
     todosMovsRes.push({
       fecha: g.fecha||g.vto||'', hora:'',
       tipo: g.fecha ? 'Gasto pagado' : 'Gasto pendiente',
@@ -3267,6 +3426,35 @@ function populateGastosMesSel() {
     const key = `${hoy.getFullYear()}-${String(i+1).padStart(2,'0')}`;
     return `<option value="${key}" ${i===hoy.getMonth()?'selected':''}>${m} ${hoy.getFullYear()}</option>`;
   }).join('');
+}
+
+// Selector de mes genérico — devuelve HTML de options con últimos 24 meses
+function buildMesOptionsHTML(selectedKey) {
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const hoy = new Date();
+  const hoyKey = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
+  const sel = selectedKey || hoyKey;
+  const opts = [];
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    opts.push(`<option value="${key}" ${key===sel?'selected':''}>${meses[d.getMonth()]} ${d.getFullYear()}</option>`);
+  }
+  return opts.join('');
+}
+
+function populateProvMesSel() {
+  const sel = document.getElementById('prov-mes-sel');
+  if (!sel) return;
+  const prev = sel.value;
+  if (!sel.innerHTML || !sel.options.length) sel.innerHTML = buildMesOptionsHTML(prev);
+}
+
+function populateDevMesSel() {
+  const sel = document.getElementById('dev-mes-sel');
+  if (!sel) return;
+  const prev = sel.value;
+  if (!sel.innerHTML || !sel.options.length) sel.innerHTML = buildMesOptionsHTML(prev);
 }
 
 function getCatalogoSorted() {
@@ -3721,17 +3909,28 @@ function provTab(tab, el) {
 }
 
 function renderProveedores() {
-  const deudas = DB.compras.filter(c => !c.pagado);
-  const historial = DB.compras.filter(c => c.pagado);
+  // Poblar selector de mes si está vacío
+  populateProvMesSel();
+  const mesKey = document.getElementById('prov-mes-sel')?.value || currentMesKey();
 
+  const deudas = DB.compras.filter(c => !c.pagado);
   const totalDeuda = deudas.reduce((s,c) => s+c.monto, 0);
-  const totalHistorial = historial.reduce((s,c) => s+c.monto, 0);
+
+  // Compras del mes: usar fechaPago o fecha como referencia del mes
+  const comprasMes = (DB.compras||[]).filter(c => (c.fechaPago||c.fecha||'').startsWith(mesKey));
+  const historialMes = comprasMes.filter(c => c.pagado);
+  const totalCompradoMes = comprasMes.reduce((s,c) => s + c.monto, 0);
+  const totalPagadoMes = historialMes.reduce((s,c) => s + c.monto, 0);
+
+  const [anio, mesNum] = mesKey.split('-');
+  const nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesLabel = `${nombresMes[parseInt(mesNum)-1]} ${anio}`;
 
   document.getElementById('prov-kpis').innerHTML = `
     <div class="kpi"><div class="kpi-label">Deuda total pendiente</div><div class="kpi-value ${totalDeuda>0?'kpi-neg':''}">${fmtC(totalDeuda)}</div><div class="kpi-sub">${deudas.length} compras sin pagar</div></div>
     <div class="kpi"><div class="kpi-label">Proveedores activos</div><div class="kpi-value">${DB.proveedores.length}</div><div class="kpi-sub">Configurados en el sistema</div></div>
-    <div class="kpi"><div class="kpi-label">Total comprado (histórico)</div><div class="kpi-value">${fmtC(totalHistorial + totalDeuda)}</div><div class="kpi-sub">${DB.compras.length} compras</div></div>
-    <div class="kpi"><div class="kpi-label">Compras pagas</div><div class="kpi-value kpi-pos">${fmtC(totalHistorial)}</div><div class="kpi-sub">${historial.length} registros</div></div>
+    <div class="kpi"><div class="kpi-label">Total comprado (${mesLabel})</div><div class="kpi-value">${fmtC(totalCompradoMes)}</div><div class="kpi-sub">${comprasMes.length} compras del mes</div></div>
+    <div class="kpi"><div class="kpi-label">Compras pagas (${mesLabel})</div><div class="kpi-value kpi-pos">${fmtC(totalPagadoMes)}</div><div class="kpi-sub">${historialMes.length} registros pagados</div></div>
   `;
 
   // Tabla deudas
@@ -3948,26 +4147,36 @@ if (!DEFAULT_DATA.devoluciones) DEFAULT_DATA.devoluciones = [];
 function renderDevoluciones() {
   if (!DB.devoluciones) DB.devoluciones = [];
 
-  const totalDevuelto = DB.devoluciones.filter(d=>d.tipo==='devolucion').reduce((s,d) => s + (d.devueltoCliente||0), 0);
-  const totalDifDev = DB.devoluciones.filter(d=>d.tipo==='cambio_barato').reduce((s,d) => s + (d.devueltoCliente||0), 0);
-  const totalCobrado = DB.devoluciones.filter(d=>d.tipo==='cambio_caro').reduce((s,d) => s + (d.cobradoCliente||0), 0);
-  const impactoNeto = totalCobrado - totalDevuelto - totalDifDev; // negativo = perdiste ventas
+  // Poblar selector de mes si está vacío y obtener mesKey seleccionado
+  populateDevMesSel();
+  const mesKey = document.getElementById('dev-mes-sel')?.value || currentMesKey();
+
+  const devsDelMes = DB.devoluciones.filter(d => (d.fechaDev||'').startsWith(mesKey));
+
+  const totalDevuelto = devsDelMes.filter(d=>d.tipo==='devolucion').reduce((s,d) => s + (d.devueltoCliente||0), 0);
+  const totalDifDev = devsDelMes.filter(d=>d.tipo==='cambio_barato').reduce((s,d) => s + (d.devueltoCliente||0), 0);
+  const totalCobrado = devsDelMes.filter(d=>d.tipo==='cambio_caro').reduce((s,d) => s + (d.cobradoCliente||0), 0);
+  const impactoNeto = totalCobrado - totalDevuelto - totalDifDev;
+
+  const [anio, mesNum] = mesKey.split('-');
+  const nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const mesLabel = `${nombresMes[parseInt(mesNum)-1]} ${anio}`;
 
   document.getElementById('dev-kpis').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Devoluciones registradas</div><div class="kpi-value">${DB.devoluciones.length}</div><div class="kpi-sub">Historial completo</div></div>
-    <div class="kpi"><div class="kpi-label">Devoluciones (plata devuelta)</div><div class="kpi-value kpi-neg">${fmtC(totalDevuelto)}</div><div class="kpi-sub">Reduce tus ventas</div></div>
-    <div class="kpi"><div class="kpi-label">Impacto neto en caja</div><div class="kpi-value ${impactoNeto>=0?'kpi-pos':'kpi-neg'}">${fmtC(impactoNeto)}</div><div class="kpi-sub">Cambios no afectan ventas</div></div>
+    <div class="kpi"><div class="kpi-label">Devoluciones (${mesLabel})</div><div class="kpi-value">${devsDelMes.length}</div><div class="kpi-sub">Registradas en el mes</div></div>
+    <div class="kpi"><div class="kpi-label">Plata devuelta</div><div class="kpi-value kpi-neg">${fmtC(totalDevuelto)}</div><div class="kpi-sub">Reduce tus ventas del mes</div></div>
+    <div class="kpi"><div class="kpi-label">Impacto neto en caja</div><div class="kpi-value ${impactoNeto>=0?'kpi-pos':'kpi-neg'}">${fmtC(impactoNeto)}</div><div class="kpi-sub">Del mes seleccionado</div></div>
   `;
 
   const tbody = document.getElementById('dev-tabla');
-  if (DB.devoluciones.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--text3)">Sin devoluciones registradas</td></tr>`;
+  if (devsDelMes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text3)">Sin devoluciones para ${mesLabel}</td></tr>`;
     return;
   }
 
   const tipos = { devolucion:'Devolución', cambio_barato:'Cambio (↓ precio)', cambio_caro:'Cambio (↑ precio)' };
   const estadoLabels = { reventa:'✅ A reventa', inutilizable:'❌ Inutilizable' };
-  tbody.innerHTML = [...DB.devoluciones].sort((a,b) => (b.fechaDev||'').localeCompare(a.fechaDev||'')).map(d => `
+  tbody.innerHTML = [...devsDelMes].sort((a,b) => (b.fechaDev||'').localeCompare(a.fechaDev||'')).map(d => `
     <tr>
       <td style="font-size:12px;font-family:var(--mono)">${d.fechaDev||'—'}</td>
       <td><span class="badge ${d.tipo==='devolucion'?'badge-danger':d.tipo==='cambio_barato'?'badge-warn':'badge-info'}">${tipos[d.tipo]||d.tipo}</span></td>
@@ -4061,7 +4270,7 @@ function saveDevolucion() {
     // Devolución pura: cliente devuelve, recibe plata — SÍ reduce ventas
     DB.movimientos.push({
       id: uid(), devId, tipo: 'ingreso', esDevolucion: true, esCierre: false,
-      medio: document.getElementById('dev-medio-dev').value === 'transferencia' ? 'pago_nube_1d' : 'efectivo',
+      medio: document.getElementById('dev-medio-dev').value === 'transferencia' ? 'pago_nube_transf' : 'efectivo',
       concepto: `↩ Devolución — ${concepto}`,
       monto: -devueltoCliente,
       descCliente: 0, comision: 0, neto: -devueltoCliente,
@@ -4073,7 +4282,7 @@ function saveDevolucion() {
     if (devueltoCliente > 0) {
       DB.movimientos.push({
         id: uid(), devId, tipo: 'ingreso', esDevolucion: true, esCierre: false,
-        medio: document.getElementById('dev-medio-dev').value === 'transferencia' ? 'pago_nube_1d' : 'efectivo',
+        medio: document.getElementById('dev-medio-dev').value === 'transferencia' ? 'pago_nube_transf' : 'efectivo',
         concepto: `↩ Cambio (dif. devuelta) — ${concepto}`,
         monto: -devueltoCliente,
         descCliente: 0, comision: 0, neto: -devueltoCliente,
@@ -4151,7 +4360,7 @@ function calcMargen() {
 
   const rows = DB.mediosPago.map(mp => {
     const costoComision = precio * mp.comision / 100;
-    const cobrado = precio - (costo > 0 ? precio * (DESCUENTOS_CLIENTE[mp.id]||0) / 100 : 0);
+    const cobrado = precio - (costo > 0 ? precio * getDescClientePct(mp.id) / 100 : 0);
     const neto = cobrado - (cobrado * mp.comision / 100);
     const ganancia = neto - costo;
     const margenPct = neto > 0 ? (ganancia / neto * 100).toFixed(1) : 0;
@@ -4431,36 +4640,73 @@ function marcarNovLeida(id) {
 
 function checkNovedadesHoy() {
   if (!DB.novedades) return;
-  const hoy = today();
-  const notasHoy = DB.novedades.filter(n => n.fecha === hoy);
-  // Solo mostrar las notas de otros usuarios
-  const notasDeOtros = (DB.novedades||[]).filter(n =>
-    n.usuario !== currentUser?.nombre &&
-    !(n.leidaPor||[]).includes(currentUser?.nombre) &&
-    (n.fecha === hoy || n.replyTo)
-  );
+  // Mostrar TODAS las notas no leídas de otros usuarios (sin importar la fecha)
+  const notasDeOtros = (DB.novedades||[])
+    .filter(n =>
+      n.usuario !== currentUser?.nombre &&
+      !(n.leidaPor||[]).includes(currentUser?.nombre)
+    )
+    .sort((a,b) => (b.fecha||'').localeCompare(a.fecha||'') || (b.hora||'').localeCompare(a.hora||''));
   if (notasDeOtros.length === 0) return;
 
-  // Popup automático
+  // Popup automático — con botón para marcar todas como leídas
   const content = document.getElementById('modal-novedades-hoy-content');
+  const hoy = today();
   if (content) {
     content.innerHTML = `
       <div style="font-size:13px;color:var(--text3);margin-bottom:14px">
-        Hay ${notasDeOtros.length} nota${notasDeOtros.length>1?'s':''} nuevas de hoy:
+        Tenés ${notasDeOtros.length} nota${notasDeOtros.length>1?'s':''} sin leer:
       </div>
-      ${notasDeOtros.map(n => `
-        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <div style="width:24px;height:24px;border-radius:50%;background:var(--accent-light);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--accent)">${n.usuario?.charAt(0)||'?'}</div>
-            <span style="font-size:12px;font-weight:500;color:var(--accent)">${n.usuario}</span>
-            <span style="font-size:11px;color:var(--text3)">${n.hora||''}</span>
-          </div>
-          <div style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap">${n.texto}</div>
-        </div>
-      `).join('')}
+      <div id="popup-nov-lista" style="max-height:340px;overflow-y:auto">
+        ${notasDeOtros.map(n => {
+          const fechaLbl = n.fecha === hoy ? 'Hoy' :
+            new Date(n.fecha+'T12:00:00').toLocaleDateString('es-AR', { weekday:'short', day:'numeric', month:'short' });
+          return `<div id="popup-nov-${n.id}" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:24px;height:24px;border-radius:50%;background:var(--accent-light);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--accent)">${n.usuario?.charAt(0)||'?'}</div>
+                <span style="font-size:12px;font-weight:500;color:var(--accent)">${n.usuario}</span>
+                <span style="font-size:11px;color:var(--text3)">${fechaLbl} ${n.hora||''}</span>
+              </div>
+              <button class="action-btn" onclick="marcarNovLeidaPopup('${n.id}')">✓ Marcar leída</button>
+            </div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.6;white-space:pre-wrap">${n.texto}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+        <button class="btn btn-secondary btn-sm" onclick="marcarTodasNovLeidas()">✓✓ Marcar todas como leídas</button>
+      </div>
     `;
     openModal('modal-novedades-hoy');
   }
+}
+
+// Marca una nota como leída desde el popup y la remueve. Si no quedan, cierra el popup.
+function marcarNovLeidaPopup(id) {
+  const n = (DB.novedades||[]).find(x => x.id === id);
+  if (!n) return;
+  if (!n.leidaPor) n.leidaPor = [];
+  if (!n.leidaPor.includes(currentUser?.nombre)) n.leidaPor.push(currentUser?.nombre);
+  saveDB();
+  const card = document.getElementById('popup-nov-'+id);
+  if (card) card.remove();
+  const restantes = document.querySelectorAll('#popup-nov-lista > div').length;
+  if (restantes === 0) closeModal('modal-novedades-hoy');
+  updateAlertBadge();
+  renderNovedades();
+}
+
+function marcarTodasNovLeidas() {
+  (DB.novedades||[]).forEach(n => {
+    if (n.usuario === currentUser?.nombre) return;
+    if (!n.leidaPor) n.leidaPor = [];
+    if (!n.leidaPor.includes(currentUser?.nombre)) n.leidaPor.push(currentUser?.nombre);
+  });
+  saveDB();
+  closeModal('modal-novedades-hoy');
+  updateAlertBadge();
+  renderNovedades();
 }
 
 // ============================================================
@@ -4615,28 +4861,191 @@ function renderConfig() {
   `).join('');
 
   // Medios de pago
-  document.getElementById('medios-tabla').innerHTML = DB.mediosPago.map(mp => `
+  document.getElementById('medios-tabla').innerHTML = (DB.mediosPago||[]).map(mp => `
     <tr>
       <td style="font-weight:500">${mp.nombre}</td>
-      <td class="num" style="font-family:var(--mono)">${Number(mp.comision).toFixed(2)}%</td>
-      <td style="font-size:12px;color:var(--text3)">${mp.desc}</td>
-      <td style="display:flex;align-items:center;gap:8px">
-        <input type="number" step="0.01" min="0" max="100"
-          style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;text-align:right;background:var(--surface2);color:var(--text)"
-          value="${Number(mp.comision).toFixed(2)}"
-          onchange="updateMedioComision('${mp.id}',this.value)">
-        <span style="font-size:12px;color:var(--text3)">%</span>
-      </td>
+      <td class="num" style="font-family:var(--mono)">${Number(mp.comision||0).toFixed(2)}%</td>
+      <td class="num" style="font-family:var(--mono)">${Number(mp.descCliente||0).toFixed(2)}%</td>
+      <td>${mp.aplicaImpuestos ? '<span class="badge badge-warn">Sí</span>' : '<span class="badge badge-gray">No</span>'}</td>
+      <td style="font-size:12px;color:var(--text3);max-width:200px">${mp.desc||'—'}</td>
+      <td><div class="row-actions">
+        <button class="action-btn" onclick="editMedioPago('${mp.id}')">✏️</button>
+        <button class="action-btn danger" onclick="deleteMedioPago('${mp.id}')">✕</button>
+      </div></td>
     </tr>
   `).join('');
+
+  // Impuestos
+  const impTbody = document.getElementById('impuestos-tabla');
+  if (impTbody) {
+    if (!DB.impuestos || DB.impuestos.length === 0) {
+      impTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text3)">Sin impuestos configurados</td></tr>`;
+    } else {
+      impTbody.innerHTML = DB.impuestos.map(i => `
+        <tr>
+          <td style="font-weight:500">${i.nombre}</td>
+          <td class="num" style="font-family:var(--mono);color:var(--warning)">${Number(i.porcentaje||0).toFixed(2)}%</td>
+          <td style="font-size:12px;color:var(--text3)">${i.descripcion||'—'}</td>
+          <td><div class="row-actions">
+            <button class="action-btn" onclick="editImpuesto('${i.id}')">✏️</button>
+            <button class="action-btn danger" onclick="deleteImpuesto('${i.id}')">✕</button>
+          </div></td>
+        </tr>
+      `).join('');
+    }
+  }
+  const aplicanEl = document.getElementById('impuestos-medios-aplican');
+  if (aplicanEl) {
+    const aplican = (DB.mediosPago||[]).filter(mp => mp.aplicaImpuestos);
+    aplicanEl.innerHTML = aplican.length === 0
+      ? '<em style="color:var(--text3)">Ningún medio de pago tiene marcado "Aplica IIBB".</em>'
+      : '<ul style="margin:0;padding-left:20px">' + aplican.map(mp => `<li>${mp.nombre}</li>`).join('') + '</ul>';
+  }
 }
 
+// ============================================================
+// CONFIG — MEDIOS DE PAGO
+// ============================================================
+function slugify(str) {
+  return (str||'').toString().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').substr(0,40) || 'medio';
+}
+
+function abrirModalMedio() {
+  document.getElementById('modal-medio-title').textContent = 'Agregar medio de pago';
+  document.getElementById('medio-edit-id').value = '';
+  document.getElementById('medio-nombre').value = '';
+  document.getElementById('medio-comision').value = '0';
+  document.getElementById('medio-desc-cliente').value = '0';
+  document.getElementById('medio-aplica-impuestos').checked = false;
+  document.getElementById('medio-desc').value = '';
+  openModal('modal-medio');
+}
+
+function editMedioPago(id) {
+  const mp = (DB.mediosPago||[]).find(x => x.id === id);
+  if (!mp) return;
+  document.getElementById('modal-medio-title').textContent = 'Editar medio de pago';
+  document.getElementById('medio-edit-id').value = id;
+  document.getElementById('medio-nombre').value = mp.nombre || '';
+  document.getElementById('medio-comision').value = mp.comision ?? 0;
+  document.getElementById('medio-desc-cliente').value = mp.descCliente ?? 0;
+  document.getElementById('medio-aplica-impuestos').checked = !!mp.aplicaImpuestos;
+  document.getElementById('medio-desc').value = mp.desc || '';
+  openModal('modal-medio');
+}
+
+function saveMedioPago() {
+  const editId = document.getElementById('medio-edit-id').value;
+  const nombre = document.getElementById('medio-nombre').value.trim();
+  const comision = parseFloat(document.getElementById('medio-comision').value) || 0;
+  const descCliente = parseFloat(document.getElementById('medio-desc-cliente').value) || 0;
+  const aplicaImpuestos = document.getElementById('medio-aplica-impuestos').checked;
+  const desc = document.getElementById('medio-desc').value.trim();
+  if (!nombre) { alert('Ingresá un nombre para el medio de pago'); return; }
+  if (!DB.mediosPago) DB.mediosPago = [];
+  if (editId) {
+    const mp = DB.mediosPago.find(x => x.id === editId);
+    if (mp) { mp.nombre = nombre; mp.comision = comision; mp.descCliente = descCliente; mp.aplicaImpuestos = aplicaImpuestos; mp.desc = desc; }
+  } else {
+    // generar ID único basado en el nombre
+    let baseId = slugify(nombre);
+    let newId = baseId;
+    let n = 1;
+    while (DB.mediosPago.some(x => x.id === newId)) { n++; newId = baseId + '_' + n; }
+    DB.mediosPago.push({ id: newId, nombre, comision, descCliente, aplicaImpuestos, desc });
+  }
+  saveDB();
+  closeModal('modal-medio');
+  poblarSelectsMedios();
+  renderConfig();
+  renderCaja();
+  renderDashboard();
+  renderResultado();
+}
+
+function deleteMedioPago(id) {
+  const mp = (DB.mediosPago||[]).find(x => x.id === id);
+  if (!mp) return;
+  const usado = (DB.movimientos||[]).some(m => m.medio === id);
+  if (usado && !confirm(`El medio "${mp.nombre}" está siendo usado en movimientos existentes. Si lo eliminás, esos movimientos seguirán guardados pero su medio quedará marcado como el propio ID. ¿Continuar?`)) return;
+  if (!usado && !confirm(`¿Eliminar el medio de pago "${mp.nombre}"?`)) return;
+  DB.mediosPago = DB.mediosPago.filter(x => x.id !== id);
+  saveDB();
+  poblarSelectsMedios();
+  renderConfig();
+  renderCaja();
+  renderDashboard();
+  renderResultado();
+}
+
+// ============================================================
+// CONFIG — IMPUESTOS
+// ============================================================
+function abrirModalImpuesto() {
+  document.getElementById('modal-impuesto-title').textContent = 'Agregar impuesto';
+  document.getElementById('impuesto-edit-id').value = '';
+  document.getElementById('impuesto-nombre').value = '';
+  document.getElementById('impuesto-porcentaje').value = '';
+  document.getElementById('impuesto-desc').value = '';
+  openModal('modal-impuesto');
+}
+
+function editImpuesto(id) {
+  const i = (DB.impuestos||[]).find(x => x.id === id);
+  if (!i) return;
+  document.getElementById('modal-impuesto-title').textContent = 'Editar impuesto';
+  document.getElementById('impuesto-edit-id').value = id;
+  document.getElementById('impuesto-nombre').value = i.nombre || '';
+  document.getElementById('impuesto-porcentaje').value = i.porcentaje ?? 0;
+  document.getElementById('impuesto-desc').value = i.descripcion || '';
+  openModal('modal-impuesto');
+}
+
+function saveImpuesto() {
+  const editId = document.getElementById('impuesto-edit-id').value;
+  const nombre = document.getElementById('impuesto-nombre').value.trim();
+  const porcentaje = parseFloat(document.getElementById('impuesto-porcentaje').value) || 0;
+  const descripcion = document.getElementById('impuesto-desc').value.trim();
+  if (!nombre) { alert('Ingresá un nombre para el impuesto'); return; }
+  if (!DB.impuestos) DB.impuestos = [];
+  if (editId) {
+    const imp = DB.impuestos.find(x => x.id === editId);
+    if (imp) { imp.nombre = nombre; imp.porcentaje = porcentaje; imp.descripcion = descripcion; }
+  } else {
+    let baseId = slugify(nombre);
+    let newId = baseId;
+    let n = 1;
+    while (DB.impuestos.some(x => x.id === newId)) { n++; newId = baseId + '_' + n; }
+    DB.impuestos.push({ id: newId, nombre, porcentaje, descripcion });
+  }
+  saveDB();
+  closeModal('modal-impuesto');
+  renderConfig();
+  renderCaja();
+  renderResultado();
+  renderDashboard();
+}
+
+function deleteImpuesto(id) {
+  const imp = (DB.impuestos||[]).find(x => x.id === id);
+  if (!imp) return;
+  if (!confirm(`¿Eliminar el impuesto "${imp.nombre}"? Las operaciones ya registradas mantienen el monto de impuesto que se les calculó en su momento.`)) return;
+  DB.impuestos = DB.impuestos.filter(x => x.id !== id);
+  saveDB();
+  renderConfig();
+  renderCaja();
+  renderResultado();
+  renderDashboard();
+}
+
+// Compatibilidad hacia atrás — legacy handler
 function updateMedioComision(id, val) {
-  const mp = DB.mediosPago.find(x => x.id === id);
+  const mp = (DB.mediosPago||[]).find(x => x.id === id);
   if (mp) {
     mp.comision = parseFloat(val) || 0;
     saveDB();
-    // Re-render to confirm saved value
     setTimeout(() => renderConfig(), 300);
   }
 }
@@ -4877,16 +5286,21 @@ function fmtC(n) {
 }
 
 function medioBadge(medio) {
-  const mp = DB.mediosPago.find(x => x.id === medio);
+  const mp = (DB.mediosPago||[]).find(x => x.id === medio);
   const clases = {
+    // Nuevos IDs
     efectivo: 'tag-efectivo',
-    debito: 'tag-debito',
-    credito1: 'tag-credito',
-    credito3: 'tag-credito',
-    qr_cuenta: 'tag-qr',
-    qr_credito: 'tag-qr',
-    pago_nube_1d: 'tag-transferencia',
-    pago_nube_3c: 'tag-transferencia'
+    qr_galicia_cuenta: 'tag-qr',
+    qr_galicia_credito: 'tag-qr',
+    transferencia_galicia: 'tag-transferencia',
+    debito_getnet: 'tag-debito',
+    credito_getnet_3: 'tag-credito',
+    credito_getnet_6: 'tag-credito',
+    pago_nube_transf: 'tag-transferencia',
+    pago_nube_3c: 'tag-transferencia',
+    // Legacy
+    debito: 'tag-debito', credito1: 'tag-credito', credito3: 'tag-credito',
+    qr_cuenta: 'tag-qr', qr_credito: 'tag-qr', pago_nube_1d: 'tag-transferencia'
   };
   return `<span class="medio-tag ${clases[medio]||'tag-transferencia'}">${mp?.nombre||medio}</span>`;
 }

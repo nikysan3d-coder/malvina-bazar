@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<!-- v1.10.0 -->
+<!-- v1.10.1 -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -1129,7 +1129,8 @@
           <table>
             <thead>
               <tr>
-                <th>Fecha</th>
+                <th>Fecha compra</th>
+                <th>Fecha pago</th>
                 <th>Proveedor</th>
                 <th class="num">Monto</th>
                 <th>Descuento</th>
@@ -3934,16 +3935,18 @@ function renderProveedores() {
   `;
 
   // Tabla deudas
+  const formasPagoLbl = { contado:'Contado', '30dias':'30 días', tarjeta:'Tarjeta', personalizado:'Personalizada' };
   document.getElementById('deudas-tabla').innerHTML = deudas.length === 0
-    ? `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3)">Sin deudas pendientes</td></tr>`
+    ? `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Sin deudas pendientes</td></tr>`
     : deudas.map(c => {
       const prov = DB.proveedores.find(p => p.id === c.provId);
-      const vto = vencimiento(c.fecha, prov?.diasPago || 0);
-      const vencido = vto && new Date(vto) < new Date();
+      const fechaPago = c.fechaPago || vencimiento(c.fecha, prov?.diasPago || 0);
+      const vencido = fechaPago && new Date(fechaPago) < new Date();
       return `<tr>
         <td style="font-weight:500">${prov?.nombre||'—'}</td>
-        <td style="font-size:12px;font-family:var(--mono)">${c.fecha}</td>
-        <td style="font-size:12px;font-family:var(--mono);color:${vencido?'var(--danger)':'var(--text2)'}">${vto||'Al contado'}</td>
+        <td style="font-size:12px;font-family:var(--mono)">${c.fecha||'—'}</td>
+        <td style="font-size:12px;font-family:var(--mono);color:${vencido?'var(--danger)':'var(--text2)'}">${fechaPago||'Al contado'}</td>
+        <td style="font-size:12px;color:var(--text3)">${formasPagoLbl[c.formaPago]||c.formaPago||'—'}</td>
         <td class="num">${fmtC(c.monto)}</td>
         <td style="font-size:12px;color:var(--text3)">${c.descuento||'—'}</td>
         <td class="num">${fmtC(c.aPagar||c.monto)}</td>
@@ -3955,16 +3958,21 @@ function renderProveedores() {
   // Historial — todas las compras ordenadas por fecha
   const todasCompras = [...DB.compras].sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
   document.getElementById('historial-tabla').innerHTML = todasCompras.length === 0
-    ? `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3)">Sin compras registradas</td></tr>`
+    ? `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3)">Sin compras registradas</td></tr>`
     : todasCompras.map(c => {
       const prov = DB.proveedores.find(p => p.id === c.provId);
+      const fPago = c.fechaPago || vencimiento(c.fecha, prov?.diasPago || 0) || c.fecha;
+      const hoy = new Date().toISOString().split('T')[0];
+      const atrasada = !c.pagado && fPago && fPago < hoy;
+      const fPagoColor = c.pagado ? 'var(--success)' : (atrasada ? 'var(--danger)' : 'var(--warning)');
       return `<tr>
         <td style="font-size:12px;font-family:var(--mono)">${c.fecha||'—'}</td>
+        <td style="font-size:12px;font-family:var(--mono);color:${fPagoColor}">${fPago||'—'}</td>
         <td style="font-weight:500">${prov?.nombre||'—'}</td>
         <td class="num">${fmtC(c.monto)}</td>
         <td style="font-size:12px;color:var(--text3)">${c.descuento||'—'}</td>
         <td class="num">${fmtC(c.aPagar||c.monto)}</td>
-        <td><span class="badge ${c.pagado?'badge-ok':'badge-warn'}">${c.pagado?'Pagado':'Pendiente'}</span></td>
+        <td><span class="badge ${c.pagado?'badge-ok':(atrasada?'badge-danger':'badge-warn')}">${c.pagado?'Pagado':(atrasada?'Atrasado':'Pendiente')}</span></td>
         <td style="font-size:12px;color:var(--text3)">${c.notas||'—'}</td>
         <td><div class="row-actions">
           <button class="action-btn" onclick="editCompra('${c.id}')">✏️</button>

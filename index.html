@@ -779,6 +779,8 @@
         <button class="currency-btn active" id="btn-ars" onclick="setCurrency('ARS')">ARS</button>
         <button class="currency-btn" id="btn-usd" onclick="setCurrency('USD')">USD</button>
       </div>
+      <button class="btn btn-secondary btn-sm" onclick="refreshFromCloud(true)">↻ Actualizar datos</button>
+      <span id="sync-status" style="font-size:11px;color:var(--text3);min-width:96px">Sincronizando...</span>
       <button class="btn btn-secondary btn-sm" onclick="exportData()">⬇ Exportar</button>
       <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-input').click()">⬆ Importar</button>
       <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
@@ -2158,37 +2160,98 @@ let currentUser = null;
 let currentCurrency = 'ARS';
 let editingId = null;
 let egresoCount = 0;
+let lastSyncRevision = null;
+let syncTimer = null;
+let saveInProgress = false;
+let pendingSave = false;
+let syncClientId = '';
+
+try {
+  syncClientId = localStorage.getItem('malvina_sync_client');
+  if (!syncClientId) {
+    syncClientId = 'pc_' + Math.random().toString(36).slice(2,11);
+    localStorage.setItem('malvina_sync_client', syncClientId);
+  }
+} catch(e) {
+  syncClientId = 'pc_' + Math.random().toString(36).slice(2,11);
+}
+
+function setSyncStatus(text, type = 'muted') {
+  const el = document.getElementById('sync-status');
+  if (!el) return;
+  const colors = {
+    ok: 'var(--success)',
+    warn: 'var(--warning)',
+    error: 'var(--danger)',
+    saving: 'var(--info)',
+    muted: 'var(--text3)'
+  };
+  el.textContent = text;
+  el.style.color = colors[type] || colors.muted;
+}
+
+function ensureDBIntegrity() {
+  if (!DB || typeof DB !== 'object') DB = {};
+  if (!DB.gastosMes) DB.gastosMes = {};
+  if (!DB.devoluciones) DB.devoluciones = [];
+  if (!DB.novedades) DB.novedades = [];
+  if (!DB.alertasLeidas) DB.alertasLeidas = [];
+  if (!DB.pedidos) DB.pedidos = [];
+  if (!DB.catalogoGastos) DB.catalogoGastos = JSON.parse(JSON.stringify(DEFAULT_DATA.catalogoGastos));
+  if (!DB.compras) DB.compras = [];
+  if (!DB.movimientos) DB.movimientos = [];
+  if (!DB.gastosFijos) DB.gastosFijos = [];
+  if (!DB.usuarios) DB.usuarios = JSON.parse(JSON.stringify(DEFAULT_DATA.usuarios));
+  if (!DB.config) DB.config = JSON.parse(JSON.stringify(DEFAULT_DATA.config));
+  if (!DB.proveedores) DB.proveedores = JSON.parse(JSON.stringify(DEFAULT_DATA.proveedores));
+  if (!DB.mediosPago) DB.mediosPago = JSON.parse(JSON.stringify(DEFAULT_DATA.mediosPago));
+  if (!DB.impuestos) DB.impuestos = JSON.parse(JSON.stringify(DEFAULT_DATA.impuestos));
+  if (!DB.config.sync) DB.config.sync = {};
+  migrarMediosPago();
+  lastSyncRevision = DB.config?.sync?.revision || lastSyncRevision;
+}
+
+function getDBRevision(data) {
+  return data?.config?.sync?.revision || null;
+}
+
+async function fetchRemoteDB() {
+  const res = await fetch(`${SUPA_URL}/rest/v1/datos?id=eq.${SUPA_ROW_ID}&select=valor`, {
+    cache: 'no-store',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${SUPA_KEY}`,
+      'Cache-Control': 'no-cache'
+    }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const rows = await res.json();
+  if (!rows || rows.length === 0 || !rows[0].valor || rows[0].valor === '{}') return null;
+  return JSON.parse(rows[0].valor);
+}
+
+function markDBForSave() {
+  if (!DB.config) DB.config = {};
+  DB.config.sync = {
+    revision: `${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    updatedAt: new Date().toISOString(),
+    updatedBy: currentUser?.nombre || 'Sistema',
+    clientId: syncClientId
+  };
+  lastSyncRevision = DB.config.sync.revision;
+}
 
 async function loadDB() {
   // 1. Intentar Supabase
   try {
-    const res = await fetch(`${SUPA_URL}/rest/v1/datos?id=eq.${SUPA_ROW_ID}&select=valor`, {
-      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
-    });
-    if (res.ok) {
-      const rows = await res.json();
-      if (rows && rows.length > 0 && rows[0].valor && rows[0].valor !== '{}') {
-        DB = JSON.parse(rows[0].valor);
-        if (!DB.gastosMes) DB.gastosMes = {};
-        if (!DB.devoluciones) DB.devoluciones = [];
-        if (!DB.novedades) DB.novedades = [];
-      if (!DB.alertasLeidas) DB.alertasLeidas = [];
-      if (!DB.pedidos) DB.pedidos = [];
-        if (!DB.alertasLeidas) DB.alertasLeidas = [];
-        if (!DB.pedidos) DB.pedidos = [];
-        if (!DB.catalogoGastos) DB.catalogoGastos = JSON.parse(JSON.stringify(DEFAULT_DATA.catalogoGastos));
-        if (!DB.compras) DB.compras = [];
-        if (!DB.movimientos) DB.movimientos = [];
-        if (!DB.gastosFijos) DB.gastosFijos = [];
-        if (!DB.usuarios) DB.usuarios = JSON.parse(JSON.stringify(DEFAULT_DATA.usuarios));
-        if (!DB.config) DB.config = JSON.parse(JSON.stringify(DEFAULT_DATA.config));
-        if (!DB.proveedores) DB.proveedores = JSON.parse(JSON.stringify(DEFAULT_DATA.proveedores));
-        if (!DB.mediosPago) DB.mediosPago = JSON.parse(JSON.stringify(DEFAULT_DATA.mediosPago));
-        if (!DB.impuestos) DB.impuestos = JSON.parse(JSON.stringify(DEFAULT_DATA.impuestos));
-        migrarMediosPago();
-        console.log('✅ Datos cargados desde Supabase');
-        return;
-      }
+    const remote = await fetchRemoteDB();
+    if (remote) {
+      DB = remote;
+      ensureDBIntegrity();
+      try { localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch(e) {}
+      setSyncStatus('Datos al día', 'ok');
+      console.log('✅ Datos cargados desde Supabase');
+      return;
     }
   } catch(e) { console.warn('Supabase no disponible:', e); }
   // 2. Fallback localStorage
@@ -2196,29 +2259,48 @@ async function loadDB() {
     const saved = localStorage.getItem(DB_KEY);
     if (saved) {
       DB = JSON.parse(saved);
-      if (!DB.gastosMes) DB.gastosMes = {};
-      if (!DB.devoluciones) DB.devoluciones = [];
-      if (!DB.novedades) DB.novedades = [];
-      if (!DB.catalogoGastos) DB.catalogoGastos = JSON.parse(JSON.stringify(DEFAULT_DATA.catalogoGastos));
-      if (!DB.compras) DB.compras = [];
-      if (!DB.movimientos) DB.movimientos = [];
-      if (!DB.gastosFijos) DB.gastosFijos = [];
-      if (!DB.usuarios) DB.usuarios = JSON.parse(JSON.stringify(DEFAULT_DATA.usuarios));
-      if (!DB.config) DB.config = JSON.parse(JSON.stringify(DEFAULT_DATA.config));
-      if (!DB.proveedores) DB.proveedores = JSON.parse(JSON.stringify(DEFAULT_DATA.proveedores));
-      if (!DB.mediosPago) DB.mediosPago = JSON.parse(JSON.stringify(DEFAULT_DATA.mediosPago));
-      if (!DB.impuestos) DB.impuestos = JSON.parse(JSON.stringify(DEFAULT_DATA.impuestos));
-      migrarMediosPago();
+      ensureDBIntegrity();
+      setSyncStatus('Modo local', 'warn');
       console.log('📦 Datos desde localStorage');
       return;
     }
   } catch(e) {}
   // 3. Default
   DB = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  ensureDBIntegrity();
+  setSyncStatus('Sin datos nube', 'warn');
   console.log('🆕 Datos por defecto');
 }
 
 async function saveDB() {
+  if (saveInProgress) {
+    pendingSave = true;
+    return;
+  }
+  saveInProgress = true;
+  pendingSave = false;
+  setSyncStatus('Guardando...', 'saving');
+
+  let remoteChanged = false;
+  try {
+    const remote = await fetchRemoteDB();
+    const remoteRevision = getDBRevision(remote);
+    remoteChanged = !!(remoteRevision && lastSyncRevision && remoteRevision !== lastSyncRevision && remote?.config?.sync?.clientId !== syncClientId);
+  } catch(e) {
+    console.warn('No se pudo verificar versión remota:', e);
+  }
+
+  if (remoteChanged) {
+    const seguir = confirm('Hay cambios nuevos cargados desde otra computadora. Si guardás ahora podrías pisarlos.\n\nAceptar = guardar igual.\nCancelar = actualizar datos desde la nube.');
+    if (!seguir) {
+      saveInProgress = false;
+      await refreshFromCloud(true);
+      setSyncStatus('Actualizado', 'ok');
+      return;
+    }
+  }
+
+  markDBForSave();
   const json = JSON.stringify(DB);
   // 1. Guardar en Supabase
   try {
@@ -2249,15 +2331,57 @@ async function saveDB() {
       });
     }
     if (res && res.ok) {
+      try { localStorage.setItem(DB_KEY, json); } catch(e) {}
+      setSyncStatus('Guardado', 'ok');
       console.log('✅ Guardado en Supabase');
     } else if (res) {
+      setSyncStatus('Error al guardar', 'error');
       console.warn('Error Supabase:', await res.text());
     }
   } catch(e) {
+    setSyncStatus('Sin conexión', 'warn');
     console.warn('Supabase error:', e);
   }
   // 2. Backup localStorage
   try { localStorage.setItem(DB_KEY, json); } catch(e) {}
+  saveInProgress = false;
+  if (pendingSave) saveDB();
+}
+
+async function refreshFromCloud(manual = false) {
+  if (saveInProgress) return;
+  try {
+    if (manual) setSyncStatus('Actualizando...', 'saving');
+    const remote = await fetchRemoteDB();
+    if (!remote) {
+      if (manual) setSyncStatus('Sin datos nube', 'warn');
+      return;
+    }
+    const remoteRevision = getDBRevision(remote);
+    if (!manual && remoteRevision && remoteRevision === lastSyncRevision) {
+      setSyncStatus('Datos al día', 'ok');
+      return;
+    }
+    if (!manual && remote?.config?.sync?.clientId === syncClientId) {
+      setSyncStatus('Datos al día', 'ok');
+      return;
+    }
+
+    DB = remote;
+    ensureDBIntegrity();
+    try { localStorage.setItem(DB_KEY, JSON.stringify(DB)); } catch(e) {}
+    if (currentUser) renderAll();
+    setSyncStatus(manual ? 'Actualizado' : 'Actualizado nube', 'ok');
+    console.log('🔄 Datos actualizados desde Supabase');
+  } catch(e) {
+    setSyncStatus('Sin conexión', manual ? 'error' : 'warn');
+    console.warn('No se pudo actualizar desde Supabase:', e);
+  }
+}
+
+function startSyncTimer() {
+  if (syncTimer) clearInterval(syncTimer);
+  syncTimer = setInterval(() => refreshFromCloud(false), 30000);
 }
 
 // ============================================================
@@ -2354,9 +2478,15 @@ function initApp() {
 
   goTo('dashboard');
   renderAll();
+  startSyncTimer();
+  refreshFromCloud(false);
   // Chequear novedades del día después de cargar
   setTimeout(checkNovedadesHoy, 1000);
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && currentUser) refreshFromCloud(false);
+});
 
 function renderAll() {
   renderDashboard();

@@ -4097,26 +4097,40 @@ function populateGastosMesSel() {
   }).join('');
 }
 
+function collectMesKeysFromDates(dates) {
+  const keys = new Set();
+  (dates || []).forEach(fecha => {
+    const key = String(fecha || '').slice(0, 7);
+    if (/^\d{4}-\d{2}$/.test(key)) keys.add(key);
+  });
+  return keys;
+}
+
 // Selector de mes genérico — devuelve HTML de options con últimos 24 meses
-function buildMesOptionsHTML(selectedKey) {
+function buildMesOptionsHTML(selectedKey, extraKeys = []) {
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const hoy = new Date();
   const hoyKey = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}`;
   const sel = selectedKey || hoyKey;
-  const opts = [];
+  const keys = new Set(extraKeys.filter(Boolean));
   for (let i = 0; i < 24; i++) {
     const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    opts.push(`<option value="${key}" ${key===sel?'selected':''}>${meses[d.getMonth()]} ${d.getFullYear()}</option>`);
+    keys.add(key);
   }
-  return opts.join('');
+  if (sel) keys.add(sel);
+  return [...keys].sort().reverse().map(key => {
+    const [anio, mes] = key.split('-').map(Number);
+    return `<option value="${key}" ${key===sel?'selected':''}>${meses[mes-1]} ${anio}</option>`;
+  }).join('');
 }
 
 function populateProvMesSel() {
   const sel = document.getElementById('prov-mes-sel');
   if (!sel) return;
-  const prev = sel.value;
-  if (!sel.innerHTML || !sel.options.length) sel.innerHTML = buildMesOptionsHTML(prev);
+  const prev = sel.value || currentMesKey();
+  const compraMeses = collectMesKeysFromDates((DB.compras || []).flatMap(c => [c.fechaPago, c.fecha]));
+  sel.innerHTML = buildMesOptionsHTML(prev, [...compraMeses]);
 }
 
 function populateDevMesSel() {
@@ -4711,6 +4725,7 @@ function saveCompra() {
   const fechaPago = document.getElementById('compra-fecha-pago').value || vencimiento(fecha, prov?.diasPago||0) || fecha;
   const formaPago = document.getElementById('compra-forma-pago').value;
   const editId = document.getElementById('modal-compra').dataset.editId;
+  const compraMesKey = (fechaPago || fecha || currentMesKey()).slice(0, 7);
 
   if (editId) {
     const idx = DB.compras.findIndex(c => c.id === editId);
@@ -4728,6 +4743,14 @@ function saveCompra() {
   closeModal('modal-compra');
   document.getElementById('compra-monto').value = '';
   document.getElementById('compra-notas').value = '';
+  const mesSel = document.getElementById('prov-mes-sel');
+  if (mesSel && /^\d{4}-\d{2}$/.test(compraMesKey)) {
+    mesSel.value = compraMesKey;
+    if (mesSel.value !== compraMesKey) {
+      mesSel.innerHTML = buildMesOptionsHTML(compraMesKey, [...collectMesKeysFromDates((DB.compras || []).flatMap(c => [c.fechaPago, c.fecha]))]);
+      mesSel.value = compraMesKey;
+    }
+  }
   renderProveedores();
   renderDashboard();
   renderResultado();

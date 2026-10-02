@@ -712,7 +712,7 @@
   <div class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-name">🌿 Malvina Bazar</div>
-      <div class="brand-sub">Administración</div>
+  <div class="brand-sub">Administración · VERSION NARANJA PLAN Z</div>
     </div>
     <div class="sidebar-nav">
       <div class="nav-section">Principal</div>
@@ -2115,6 +2115,7 @@ const DEFAULT_DATA = {
     { id: 'debito_getnet',      nombre: 'Débito Getnet',                         comision: 0.01,  descCliente: 0,  aplicaImpuestos: true,  diasAcreditacion: 1, acreditacionHabiles: true,  desc: '~0% real (aplica IIBB)' },
     { id: 'credito_getnet_3',   nombre: 'Crédito Getnet 3 cuotas Mi Pyme',       comision: 11.39, descCliente: 0,  aplicaImpuestos: true,  diasAcreditacion: 2, acreditacionHabiles: true,  desc: 'Arancel + Costo Fin + IVAs (aplica IIBB)' },
     { id: 'credito_getnet_6',   nombre: 'Crédito Getnet 6 cuotas Mi Pyme',       comision: 17.71, descCliente: 0,  aplicaImpuestos: true,  diasAcreditacion: 2, acreditacionHabiles: true,  desc: 'Arancel + Costo Fin + IVAs (aplica IIBB)' },
+    { id: 'naranja_plan_z',     nombre: 'Tarjeta Naranja Plan Z',                comision: 15.27, descCliente: 0,  aplicaImpuestos: false, diasAcreditacion: 4, acreditacionHabiles: true,  desc: 'Comisión efectiva real sobre acreditación; sin IIBB aparte' },
     { id: 'pago_nube_transf',   nombre: 'Pago Nube Transferencia',               comision: 1.20,  descCliente: 10, aplicaImpuestos: true,  diasAcreditacion: 1, acreditacionHabiles: false, desc: '0,99% + IVA (aplica IIBB)' },
     { id: 'pago_nube_6_cuotas_sin_interes', nombre: 'Pago Nube 6 Cuotas Sin Interés', comision: 16.44, descCliente: 0, aplicaImpuestos: true, diasAcreditacion: 14, acreditacionHabiles: false, desc: '3,29% + 10,3% + IVA' }
   ],
@@ -2206,9 +2207,20 @@ function ensureDBIntegrity() {
   if (!DB.proveedores) DB.proveedores = JSON.parse(JSON.stringify(DEFAULT_DATA.proveedores));
   if (!DB.mediosPago) DB.mediosPago = JSON.parse(JSON.stringify(DEFAULT_DATA.mediosPago));
   if (!DB.impuestos) DB.impuestos = JSON.parse(JSON.stringify(DEFAULT_DATA.impuestos));
+  (DB.gastosFijos || []).forEach(normalizarGastoPagoFuturo);
   if (!DB.config.sync) DB.config.sync = {};
   migrarMediosPago();
   lastSyncRevision = DB.config?.sync?.revision || lastSyncRevision;
+}
+
+function normalizarGastoPagoFuturo(g) {
+  if (!g || !g.fecha) return g;
+  const fechaPago = String(g.fecha).slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fechaPago) && fechaPago > today()) {
+    if (!g.vto) g.vto = fechaPago;
+    g.fecha = '';
+  }
+  return g;
 }
 
 function getDBRevision(data) {
@@ -2489,6 +2501,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function renderAll() {
+  poblarSelectsMedios();
   renderDashboard();
   renderCaja();
   renderResultado();
@@ -2878,6 +2891,24 @@ function migrarMediosPago() {
   });
 }
 
+function asegurarMedioNaranjaPlanZ() {
+  if (!DB.mediosPago) DB.mediosPago = [];
+  const def = DEFAULT_DATA.mediosPago.find(m => m.id === 'naranja_plan_z');
+  if (!def) return;
+  const mp = DB.mediosPago.find(m => m.id === def.id);
+  if (!mp) {
+    DB.mediosPago.push(JSON.parse(JSON.stringify(def)));
+  } else {
+    mp.nombre = def.nombre;
+    mp.comision = def.comision;
+    mp.descCliente = def.descCliente;
+    mp.aplicaImpuestos = def.aplicaImpuestos;
+    mp.diasAcreditacion = def.diasAcreditacion;
+    mp.acreditacionHabiles = def.acreditacionHabiles;
+    mp.desc = def.desc;
+  }
+}
+
 // Devuelve el % de descuento estándar al cliente para un medio (basado en la config actual)
 function getDescClientePct(medioId) {
   const mp = (DB.mediosPago||[]).find(x => x.id === medioId);
@@ -2939,6 +2970,7 @@ function labelAcreditacion(mp) {
 
 // Pobla todos los <select> de medios de pago del sistema, preservando el valor seleccionado.
 function poblarSelectsMedios() {
+  asegurarMedioNaranjaPlanZ();
   const targets = [
     { id: 'venta-medio', includeAll: true },
     { id: 'mixto-medio1', includeAll: true },
@@ -4163,11 +4195,13 @@ function onGastoSelChange() {
 
 function renderGastos() {
   const mesKey = document.getElementById('gastos-mes-sel')?.value || currentMesKey();
+  (DB.gastosFijos || []).forEach(normalizarGastoPagoFuturo);
   const gastosDelMes = (DB.gastosFijos || []).filter(g => g.mesKey === mesKey);
 
   const totalMes = gastosDelMes.reduce((s,g) => s + g.monto, 0);
   const totalPagadoMes = gastosDelMes.filter(g => g.fecha).reduce((s,g) => s + g.monto, 0);
   const totalPendienteMes = gastosDelMes.filter(g => !g.fecha && !g.cancelado).reduce((s,g) => s + g.monto, 0);
+  const cantPendientesMes = gastosDelMes.filter(g => !g.fecha && !g.cancelado).length;
   const cantItems = gastosDelMes.length;
   const catalogo = getCatalogoSorted();
   const nombresCargados = new Set(gastosDelMes.map(g => g.nombre));
@@ -4176,7 +4210,7 @@ function renderGastos() {
   document.getElementById('gastos-kpis').innerHTML = `
     <div class="kpi"><div class="kpi-label">Gastos cargados del mes</div><div class="kpi-value">${fmtC(totalMes)}</div><div class="kpi-sub">${cantItems} registros</div></div>
     <div class="kpi"><div class="kpi-label">Pagado</div><div class="kpi-value kpi-pos">${fmtC(totalPagadoMes)}</div><div class="kpi-sub">Ya salió de caja</div></div>
-    <div class="kpi"><div class="kpi-label">Por pagar</div><div class="kpi-value ${totalPendienteMes>0?'kpi-neg':''}">${fmtC(totalPendienteMes)}</div><div class="kpi-sub">${noConCargados.length} ítems conocidos sin cargar</div></div>
+    <div class="kpi"><div class="kpi-label">Por pagar</div><div class="kpi-value ${totalPendienteMes>0?'kpi-neg':''}">${fmtC(totalPendienteMes)}</div><div class="kpi-sub">${cantPendientesMes} gastos cargados pendientes</div></div>
     <div class="kpi"><div class="kpi-label">Ítems nuevos este mes</div><div class="kpi-value">${gastosDelMes.filter(g=>g.esNuevo).length}</div><div class="kpi-sub">No estaban en catálogo</div></div>
   `;
 
@@ -4344,8 +4378,8 @@ function editGasto(id) {
 function saveGasto() {
   const sel = document.getElementById('gasto-sel').value;
   const monto = parseFloat(document.getElementById('gasto-monto').value) || 0;
-  const vto = document.getElementById('gasto-vto').value;
-  const fecha = document.getElementById('gasto-fecha').value;
+  let vto = document.getElementById('gasto-vto').value;
+  let fecha = document.getElementById('gasto-fecha').value;
   const medio = document.getElementById('gasto-medio').value;
   const cuotas = parseInt(document.getElementById('gasto-cuotas')?.value) || 1;
   const notas = document.getElementById('gasto-notas').value.trim();
@@ -4369,6 +4403,11 @@ function saveGasto() {
     alert('Seleccioná un ítem'); return;
   }
   if (monto <= 0) { alert('Ingresá el monto'); return; }
+  if (fecha && fecha > today()) {
+    if (!vto) vto = fecha;
+    fecha = '';
+    alert('La fecha de pago es futura, así que lo dejo como pendiente. Usá "Fecha de vencimiento" para anotar cuándo lo vas a pagar y "Fecha de pago efectivo" recién cuando ya salió de caja.');
+  }
 
   if (!DB.gastosFijos) DB.gastosFijos = [];
 

@@ -712,7 +712,7 @@
   <div class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-name">🌿 Malvina Bazar</div>
-  <div class="brand-sub">Administración · VERSION NARANJA PLAN Z</div>
+      <div class="brand-sub">NICOTEL · WHATSAPP ENVÍOS</div>
     </div>
     <div class="sidebar-nav">
       <div class="nav-section">Principal</div>
@@ -737,6 +737,9 @@
         <span class="nav-icon">🚚</span> Proveedores
       </div>
       <div class="nav-section">Herramientas</div>
+      <div class="nav-item" onclick="goTo('envios')">
+        <span class="nav-icon">📦</span> WhatsApp / Envíos
+      </div>
       <div class="nav-item" onclick="goTo('devoluciones')">
         <span class="nav-icon">↩️</span> Devoluciones
       </div>
@@ -1329,6 +1332,59 @@
       </div>
     </div>
 
+    <!-- WHATSAPP / ENVIOS -->
+    <div class="page" id="page-envios">
+      <div class="flex-between mb-20">
+        <div>
+          <div class="page-title">WhatsApp / Envíos</div>
+          <div class="page-sub">Control de ventas por WhatsApp, entregas, efectivo rendido y kilómetros de Juan</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="date" class="form-input" id="envios-fecha-sel" style="width:160px" onchange="renderEnvios()">
+          <button class="btn btn-secondary" onclick="openModal('modal-km-juan')">+ Km Juan</button>
+          <button class="btn btn-primary" onclick="abrirModalEnvio()">+ Nuevo envío</button>
+        </div>
+      </div>
+
+      <div class="grid-4 mb-20" id="envios-kpis"></div>
+
+      <div class="grid-2 mb-20">
+        <div class="card">
+          <div class="card-title">Envíos del día</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Listado operativo para saber qué falta preparar, entregar, cobrar, rendir o cargar en PDV.</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Entrega</th>
+                  <th class="num">Monto</th>
+                  <th>Estado</th>
+                  <th>PDV</th>
+                  <th>Efectivo</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="envios-tabla"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Rendición y kilómetros</div>
+          <div id="envios-rendicion"></div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:14px 0">
+          <div class="card-title" style="font-size:13px;margin-bottom:8px">Km Juan</div>
+          <div id="km-juan-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Pendientes operativos</div>
+        <div id="envios-alertas"></div>
+      </div>
+    </div>
+
     <!-- DEVOLUCIONES -->
     <div class="page" id="page-devoluciones">
       <div class="flex-between mb-20">
@@ -1567,6 +1623,132 @@
 </div><!-- /app -->
 
 <!-- MODALES -->
+
+<!-- Modal: Nuevo envio WhatsApp -->
+<div class="modal-overlay" id="modal-envio">
+  <div class="modal" style="width:680px">
+    <div class="modal-title">Nuevo envío de WhatsApp</div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Fecha de venta</label>
+        <input type="date" class="form-input" id="envio-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Fecha de entrega</label>
+        <input type="date" class="form-input" id="envio-fecha-entrega">
+      </div>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Cliente</label>
+        <input type="text" class="form-input" id="envio-cliente" placeholder="Ej: Susana">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input type="text" class="form-input" id="envio-telefono" placeholder="Ej: 11 1234-5678">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dirección</label>
+      <input type="text" class="form-input" id="envio-direccion" placeholder="Calle, altura, localidad, referencias">
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Producto / detalle</label>
+        <input type="text" class="form-input" id="envio-producto" placeholder="Ej: Mandolina Hudson">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Zona / localidad</label>
+        <input type="text" class="form-input" id="envio-zona" placeholder="Ej: San Justo">
+      </div>
+    </div>
+    <div class="grid-3" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Monto a cobrar</label>
+        <input type="number" class="form-input" id="envio-monto" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Km estimados</label>
+        <input type="number" class="form-input" id="envio-km" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forma de pago</label>
+        <select class="form-select" id="envio-pago">
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="qr">QR</option>
+          <option value="ya_pagado">Ya pagado</option>
+          <option value="contraentrega">Contraentrega</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-3" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-select" id="envio-estado">
+          <option value="pendiente">Pendiente</option>
+          <option value="preparado">Preparado</option>
+          <option value="en_camino">En camino</option>
+          <option value="entregado">Entregado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsable</label>
+        <select class="form-select" id="envio-responsable">
+          <option value="Juan">Juan</option>
+          <option value="Nico">Nico</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Día</label>
+        <input type="text" class="form-input" id="envio-dia" placeholder="Ej: lunes">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px">
+        <input type="checkbox" id="envio-pdv"> Cargado en PDV
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px">
+        <input type="checkbox" id="envio-cobrado"> Cobrado por Juan
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px">
+        <input type="checkbox" id="envio-rendido"> Plata dejada en local
+      </label>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observaciones</label>
+      <input type="text" class="form-input" id="envio-notas" placeholder="Horario, referencia, pedido especial">
+    </div>
+    <div class="flex-end">
+      <button class="btn btn-secondary" onclick="closeModal('modal-envio')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEnvio()">Guardar envío</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Km Juan -->
+<div class="modal-overlay" id="modal-km-juan">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">Cargar kilómetros de Juan</div>
+    <div class="form-group">
+      <label class="form-label">Fecha</label>
+      <input type="date" class="form-input" id="km-fecha">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kilómetros realizados</label>
+      <input type="number" class="form-input" id="km-cantidad" placeholder="Ej: 48">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observación</label>
+      <input type="text" class="form-input" id="km-nota" placeholder="Ej: San Justo + Moreno">
+    </div>
+    <div class="flex-end">
+      <button class="btn btn-secondary" onclick="closeModal('modal-km-juan')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarKmJuan()">Guardar</button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal: Movimiento de caja -->
 <div class="modal-overlay" id="modal-caja">
@@ -2153,7 +2335,9 @@ const DEFAULT_DATA = {
   devoluciones: [],
   novedades: [],
   alertasLeidas: [],
-  pedidos: []
+  pedidos: [],
+  enviosWhatsapp: [],
+  kmJuan: []
 };
 
 let DB = {};
@@ -2198,6 +2382,8 @@ function ensureDBIntegrity() {
   if (!DB.novedades) DB.novedades = [];
   if (!DB.alertasLeidas) DB.alertasLeidas = [];
   if (!DB.pedidos) DB.pedidos = [];
+  if (!DB.enviosWhatsapp) DB.enviosWhatsapp = JSON.parse(JSON.stringify(DEFAULT_DATA.enviosWhatsapp));
+  if (!DB.kmJuan) DB.kmJuan = JSON.parse(JSON.stringify(DEFAULT_DATA.kmJuan));
   if (!DB.catalogoGastos) DB.catalogoGastos = JSON.parse(JSON.stringify(DEFAULT_DATA.catalogoGastos));
   if (!DB.compras) DB.compras = [];
   if (!DB.movimientos) DB.movimientos = [];
@@ -2480,6 +2666,8 @@ function initApp() {
 
   // Set today in caja fecha
   document.getElementById('caja-fecha').value = today();
+  const enviosFecha = document.getElementById('envios-fecha-sel');
+  if (enviosFecha && !enviosFecha.value) enviosFecha.value = today();
 
   // Populate selects
   populateResultadoSelects();
@@ -2508,6 +2696,7 @@ function renderAll() {
   renderFlujo();
   renderGastos();
   renderProveedores();
+  renderEnvios();
   renderDevoluciones();
   renderNovedades();
   renderRecordatorios();
@@ -2526,6 +2715,7 @@ const pageTitles = {
   flujo: 'Flujo de caja',
   gastos: 'Gastos fijos',
   proveedores: 'Proveedores',
+  envios: 'WhatsApp / Envíos',
   devoluciones: 'Devoluciones y cambios',
   margen: 'Calculadora de margen',
   config: 'Configuración',
@@ -2546,6 +2736,7 @@ function goTo(page) {
   if (page === 'flujo') renderFlujo();
   if (page === 'gastos') renderGastos();
   if (page === 'proveedores') renderProveedores();
+  if (page === 'envios') renderEnvios();
   if (page === 'devoluciones') renderDevoluciones();
   if (page === 'margen') renderMargen();
   if (page === 'novedades') renderNovedades();
@@ -4114,6 +4305,204 @@ function renderResultado() {
         <td style="font-size:12px;color:var(--text3)">${m.usuario}</td>
         <td class="num" style="font-family:var(--mono);font-weight:500;color:${m.esNeg?'var(--danger)':'var(--success)'}">${m.esNeg?'−':''}${fmtC(m.monto)}</td>
       </tr>`).join('');
+}
+
+// ============================================================
+// WHATSAPP / ENVIOS
+// ============================================================
+function abrirModalEnvio() {
+  openModal('modal-envio');
+}
+
+function estadoEnvioLabel(estado) {
+  const labels = {
+    pendiente: 'Pendiente',
+    preparado: 'Preparado',
+    en_camino: 'En camino',
+    entregado: 'Entregado',
+    cancelado: 'Cancelado'
+  };
+  return labels[estado] || estado || 'Pendiente';
+}
+
+function estadoEnvioBadge(estado) {
+  const clases = {
+    pendiente: 'badge-warn',
+    preparado: 'badge-gray',
+    en_camino: 'badge-info',
+    entregado: 'badge-ok',
+    cancelado: 'badge-danger'
+  };
+  return `<span class="badge ${clases[estado] || 'badge-gray'}">${estadoEnvioLabel(estado)}</span>`;
+}
+
+function renderEnvios() {
+  if (!DB.enviosWhatsapp) DB.enviosWhatsapp = [];
+  if (!DB.kmJuan) DB.kmJuan = [];
+  const fechaSel = document.getElementById('envios-fecha-sel')?.value || today();
+  const envios = DB.enviosWhatsapp.filter(e => (e.fechaEntrega || e.fecha) === fechaSel);
+  const mesKey = fechaSel.slice(0, 7);
+  const enviosMes = DB.enviosWhatsapp.filter(e => (e.fechaEntrega || e.fecha || '').startsWith(mesKey));
+  const kmDia = DB.kmJuan.filter(k => k.fecha === fechaSel);
+  const kmMes = DB.kmJuan.filter(k => (k.fecha || '').startsWith(mesKey));
+
+  const totalDia = envios.reduce((s,e)=>s+(Number(e.monto)||0),0);
+  const pendientes = envios.filter(e => !['entregado','cancelado'].includes(e.estado)).length;
+  const efectivoPend = enviosMes
+    .filter(e => e.responsable === 'Juan' && e.formaPago === 'efectivo' && e.cobradoPorJuan && !e.efectivoRendido)
+    .reduce((s,e)=>s+(Number(e.monto)||0),0);
+  const totalKmMes = kmMes.reduce((s,k)=>s+(Number(k.km)||0),0);
+
+  const kpis = document.getElementById('envios-kpis');
+  if (kpis) kpis.innerHTML = `
+    <div class="kpi"><div class="kpi-label">Envíos del día</div><div class="kpi-value">${envios.length}</div><div class="kpi-sub">${pendientes} pendientes</div></div>
+    <div class="kpi"><div class="kpi-label">Monto del día</div><div class="kpi-value">${fmtC(totalDia)}</div><div class="kpi-sub">Según fecha de entrega</div></div>
+    <div class="kpi"><div class="kpi-label">Efectivo por rendir</div><div class="kpi-value ${efectivoPend>0?'kpi-neg':'kpi-pos'}">${fmtC(efectivoPend)}</div><div class="kpi-sub">Cobrado por Juan y no dejado</div></div>
+    <div class="kpi"><div class="kpi-label">Km Juan del mes</div><div class="kpi-value">${totalKmMes.toLocaleString('es-AR')}</div><div class="kpi-sub">${kmDia.reduce((s,k)=>s+(Number(k.km)||0),0)} km el día seleccionado</div></div>
+  `;
+
+  const tbody = document.getElementById('envios-tabla');
+  if (tbody) {
+    if (envios.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3)">Sin envíos para esta fecha</td></tr>`;
+    } else {
+      tbody.innerHTML = envios.map(e => `
+        <tr>
+          <td>
+            <div style="font-weight:500">${e.cliente || 'Sin cliente'}</div>
+            <div style="font-size:11px;color:var(--text3)">${e.telefono || ''}</div>
+            <div style="font-size:11px;color:var(--text3)">${e.producto || ''}</div>
+          </td>
+          <td>
+            <div style="font-size:12px;color:var(--text2)">${e.zona || '—'}</div>
+            <div style="font-size:11px;color:var(--text3)">${e.direccion || ''}</div>
+          </td>
+          <td class="num" style="font-family:var(--mono);font-weight:500">${fmtC(e.monto || 0)}</td>
+          <td>${estadoEnvioBadge(e.estado)}</td>
+          <td>${e.cargadoPDV ? '<span class="badge badge-ok">Sí</span>' : '<span class="badge badge-warn">No</span>'}</td>
+          <td>
+            ${e.formaPago === 'efectivo'
+              ? (e.efectivoRendido ? '<span class="badge badge-ok">Rendido</span>' : (e.cobradoPorJuan ? '<span class="badge badge-danger">Por rendir</span>' : '<span class="badge badge-warn">No cobrado</span>'))
+              : '<span class="badge badge-gray">—</span>'}
+          </td>
+          <td>
+            <div class="row-actions">
+              ${!e.cargadoPDV ? `<button class="action-btn" onclick="marcarEnvioPDV('${e.id}')">PDV</button>` : ''}
+              ${e.formaPago === 'efectivo' && e.cobradoPorJuan && !e.efectivoRendido ? `<button class="action-btn" onclick="marcarEnvioRendido('${e.id}')">Rendido</button>` : ''}
+              ${e.estado !== 'entregado' ? `<button class="action-btn" onclick="marcarEnvioEntregado('${e.id}')">Entregado</button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  const rendicion = document.getElementById('envios-rendicion');
+  if (rendicion) {
+    const efectivoCobradoMes = enviosMes.filter(e => e.responsable === 'Juan' && e.formaPago === 'efectivo' && e.cobradoPorJuan).reduce((s,e)=>s+(Number(e.monto)||0),0);
+    const efectivoRendidoMes = enviosMes.filter(e => e.responsable === 'Juan' && e.formaPago === 'efectivo' && e.efectivoRendido).reduce((s,e)=>s+(Number(e.monto)||0),0);
+    rendicion.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text2)">Cobrado por Juan</span><span style="font-family:var(--mono)">${fmtC(efectivoCobradoMes)}</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--success)">Dejado en local</span><span style="font-family:var(--mono);color:var(--success)">${fmtC(efectivoRendidoMes)}</span></div>
+        <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px"><strong>Pendiente de rendir</strong><strong style="font-family:var(--mono);color:${efectivoPend>0?'var(--danger)':'var(--success)'}">${fmtC(efectivoPend)}</strong></div>
+      </div>
+    `;
+  }
+
+  const kmList = document.getElementById('km-juan-list');
+  if (kmList) {
+    const rows = kmMes.slice().sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    kmList.innerHTML = rows.length ? rows.map(k => `
+      <div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div><div style="font-size:13px;font-weight:500">${k.fecha}</div><div style="font-size:11px;color:var(--text3)">${k.nota || ''}</div></div>
+        <div style="font-family:var(--mono);font-weight:600">${Number(k.km||0).toLocaleString('es-AR')} km</div>
+      </div>
+    `).join('') : '<div style="font-size:13px;color:var(--text3);padding:8px 0">Sin kilómetros cargados este mes</div>';
+  }
+
+  const alertas = document.getElementById('envios-alertas');
+  if (alertas) {
+    const sinPDV = enviosMes.filter(e => !e.cargadoPDV && e.estado !== 'cancelado');
+    const porRendir = enviosMes.filter(e => e.responsable === 'Juan' && e.formaPago === 'efectivo' && e.cobradoPorJuan && !e.efectivoRendido);
+    const atrasados = enviosMes.filter(e => (e.fechaEntrega || '') < today() && !['entregado','cancelado'].includes(e.estado));
+    const items = [];
+    if (sinPDV.length) items.push(`<div class="alert alert-warn">⚠️ <div><strong>${sinPDV.length} envío${sinPDV.length>1?'s':''} sin cargar en PDV.</strong> Revisar antes del cierre.</div></div>`);
+    if (porRendir.length) items.push(`<div class="alert alert-danger">💵 <div><strong>${fmtC(efectivoPend)} pendientes de rendir por Juan.</strong> Marcar cuando deje la plata en el local.</div></div>`);
+    if (atrasados.length) items.push(`<div class="alert alert-danger">🚚 <div><strong>${atrasados.length} entrega${atrasados.length>1?'s':''} atrasada${atrasados.length>1?'s':''}.</strong> Revisar agenda de WhatsApp.</div></div>`);
+    alertas.innerHTML = items.length ? items.join('') : '<div style="font-size:13px;color:var(--success);padding:6px 0">Sin pendientes operativos fuertes para este mes.</div>';
+  }
+}
+
+function guardarEnvio() {
+  const cliente = document.getElementById('envio-cliente').value.trim();
+  const monto = parseFloat(document.getElementById('envio-monto').value) || 0;
+  if (!cliente || monto <= 0) { alert('Completá cliente y monto.'); return; }
+  DB.enviosWhatsapp = DB.enviosWhatsapp || [];
+  DB.enviosWhatsapp.push({
+    id: uid(),
+    fecha: document.getElementById('envio-fecha').value || today(),
+    cliente,
+    telefono: document.getElementById('envio-telefono').value.trim(),
+    direccion: document.getElementById('envio-direccion').value.trim(),
+    zona: document.getElementById('envio-zona').value.trim(),
+    producto: document.getElementById('envio-producto').value.trim(),
+    monto,
+    km: parseFloat(document.getElementById('envio-km').value) || 0,
+    formaPago: document.getElementById('envio-pago').value,
+    estado: document.getElementById('envio-estado').value,
+    fechaEntrega: document.getElementById('envio-fecha-entrega').value || today(),
+    dia: document.getElementById('envio-dia').value.trim(),
+    responsable: document.getElementById('envio-responsable').value,
+    cargadoPDV: document.getElementById('envio-pdv').checked,
+    cobradoPorJuan: document.getElementById('envio-cobrado').checked,
+    efectivoRendido: document.getElementById('envio-rendido').checked,
+    fechaRendido: document.getElementById('envio-rendido').checked ? today() : '',
+    notas: document.getElementById('envio-notas').value.trim()
+  });
+  saveDB();
+  closeModal('modal-envio');
+  const fechaSel = document.getElementById('envios-fecha-sel');
+  if (fechaSel) fechaSel.value = DB.enviosWhatsapp.at(-1).fechaEntrega;
+  renderEnvios();
+  renderDashboard();
+}
+
+function guardarKmJuan() {
+  const fecha = document.getElementById('km-fecha').value || today();
+  const km = parseFloat(document.getElementById('km-cantidad').value) || 0;
+  if (km <= 0) { alert('Ingresá los kilómetros.'); return; }
+  DB.kmJuan = DB.kmJuan || [];
+  DB.kmJuan.push({ id: uid(), fecha, km, nota: document.getElementById('km-nota').value.trim() });
+  saveDB();
+  closeModal('modal-km-juan');
+  const fechaSel = document.getElementById('envios-fecha-sel');
+  if (fechaSel) fechaSel.value = fecha;
+  renderEnvios();
+}
+
+function findEnvio(id) {
+  return (DB.enviosWhatsapp || []).find(e => e.id === id);
+}
+
+function marcarEnvioPDV(id) {
+  const e = findEnvio(id); if (!e) return;
+  e.cargadoPDV = true;
+  saveDB(); renderEnvios();
+}
+
+function marcarEnvioRendido(id) {
+  const e = findEnvio(id); if (!e) return;
+  e.efectivoRendido = true;
+  e.fechaRendido = today();
+  saveDB(); renderEnvios();
+}
+
+function marcarEnvioEntregado(id) {
+  const e = findEnvio(id); if (!e) return;
+  e.estado = 'entregado';
+  if (e.formaPago === 'efectivo') e.cobradoPorJuan = true;
+  saveDB(); renderEnvios();
 }
 
 // ============================================================
@@ -5978,6 +6367,30 @@ function openModal(id) {
       document.getElementById('pedido-estado').value = 'pendiente';
       document.getElementById('pedido-notas').value = '';
     }
+  }
+  if (id === 'modal-envio') {
+    document.getElementById('envio-fecha').value = today();
+    document.getElementById('envio-fecha-entrega').value = document.getElementById('envios-fecha-sel')?.value || today();
+    document.getElementById('envio-cliente').value = '';
+    document.getElementById('envio-telefono').value = '';
+    document.getElementById('envio-direccion').value = '';
+    document.getElementById('envio-producto').value = '';
+    document.getElementById('envio-zona').value = '';
+    document.getElementById('envio-monto').value = '';
+    document.getElementById('envio-km').value = '';
+    document.getElementById('envio-pago').value = 'efectivo';
+    document.getElementById('envio-estado').value = 'pendiente';
+    document.getElementById('envio-responsable').value = 'Juan';
+    document.getElementById('envio-dia').value = '';
+    document.getElementById('envio-pdv').checked = false;
+    document.getElementById('envio-cobrado').checked = false;
+    document.getElementById('envio-rendido').checked = false;
+    document.getElementById('envio-notas').value = '';
+  }
+  if (id === 'modal-km-juan') {
+    document.getElementById('km-fecha').value = document.getElementById('envios-fecha-sel')?.value || today();
+    document.getElementById('km-cantidad').value = '';
+    document.getElementById('km-nota').value = '';
   }
   if (id === 'modal-gasto') {
     populateGastoSel();

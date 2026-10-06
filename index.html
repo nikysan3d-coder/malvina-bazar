@@ -4654,6 +4654,28 @@ function collectMesKeysFromDates(dates) {
   return keys;
 }
 
+function diasHastaFecha(fecha) {
+  if (!fecha || !/^\d{4}-\d{2}-\d{2}/.test(String(fecha))) return null;
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const venc = new Date(String(fecha).slice(0, 10) + 'T00:00:00');
+  return Math.round((venc - hoy) / 86400000);
+}
+
+function textoDiasVencimiento(dias) {
+  if (dias === null || dias === undefined) return 'Sin fecha';
+  if (dias < 0) return `Vencido hace ${Math.abs(dias)} día${Math.abs(dias)===1?'':'s'}`;
+  if (dias === 0) return 'Vence hoy';
+  if (dias === 1) return 'Vence mañana';
+  return `Faltan ${dias} días`;
+}
+
+function badgeVencimiento(dias) {
+  if (dias === null || dias === undefined) return '<span class="badge badge-gray">Sin fecha</span>';
+  const cls = dias < 0 || dias <= 3 ? 'badge-danger' : dias <= 7 ? 'badge-warn' : 'badge-gray';
+  return `<span class="badge ${cls}">${textoDiasVencimiento(dias)}</span>`;
+}
+
 // Selector de mes genérico — devuelve HTML de options con últimos 24 meses
 function buildMesOptionsHTML(selectedKey, extraKeys = []) {
   const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -4755,22 +4777,22 @@ function renderGastos() {
   const pagados = gastosDelMes.filter(g => g.fecha);
 
   // Ordenar pendientes por vencimiento más urgente
-  pendientes.sort((a,b) => (a.vto||'9999').localeCompare(b.vto||'9999'));
+  pendientes.sort((a,b) => {
+    const da = diasHastaFecha(a.vto);
+    const db = diasHastaFecha(b.vto);
+    if (da === null && db === null) return (a.nombre||'').localeCompare(b.nombre||'', 'es');
+    if (da === null) return 1;
+    if (db === null) return -1;
+    return da - db;
+  });
   pagados.sort((a,b) => (b.fecha||'').localeCompare(a.fecha||''));
 
   const medioLabel = { efectivo:'Efectivo', debito:'Débito', tarjeta:'Tarjeta', transferencia:'Transferencia', debito_automatico:'Déb. automático', otro:'Otro' };
 
   function gastoRow(g, isPagado) {
-    const hoy = new Date();
-    const vtoDate = g.vto ? new Date(g.vto) : null;
-    const diasVto = vtoDate ? Math.round((vtoDate - hoy) / 86400000) : null;
+    const diasVto = diasHastaFecha(g.vto);
     let vtoLabel = g.vto || '—';
-    let vtoBadge = '';
-    if (!isPagado && diasVto !== null) {
-      if (diasVto < 0) vtoBadge = '<span class="badge badge-danger" style="margin-left:4px">Vencido</span>';
-      else if (diasVto <= 3) vtoBadge = '<span class="badge badge-danger" style="margin-left:4px">'+diasVto+'d</span>';
-      else if (diasVto <= 7) vtoBadge = '<span class="badge badge-warn" style="margin-left:4px">'+diasVto+'d</span>';
-    }
+    let vtoBadge = !isPagado ? `<div style="margin-top:4px">${badgeVencimiento(diasVto)}</div>` : '';
     const cuotaInfo = g.cuotaNum ? `<div style="font-size:11px;color:var(--info)">Cuota ${g.cuotaNum}/${g.cuotaTotal}</div>` : '';
     return `<tr>
       <td>
@@ -5153,7 +5175,18 @@ function renderProveedores() {
   populateProvMesSel();
   const mesKey = document.getElementById('prov-mes-sel')?.value || currentMesKey();
 
-  const deudas = DB.compras.filter(c => !c.pagado);
+  const deudas = DB.compras.filter(c => !c.pagado).sort((a,b) => {
+    const provA = DB.proveedores.find(p => p.id === a.provId);
+    const provB = DB.proveedores.find(p => p.id === b.provId);
+    const fechaA = a.fechaPago || vencimiento(a.fecha, provA?.diasPago || 0);
+    const fechaB = b.fechaPago || vencimiento(b.fecha, provB?.diasPago || 0);
+    const da = diasHastaFecha(fechaA);
+    const db = diasHastaFecha(fechaB);
+    if (da === null && db === null) return (provA?.nombre||'').localeCompare(provB?.nombre||'', 'es');
+    if (da === null) return 1;
+    if (db === null) return -1;
+    return da - db;
+  });
   const totalDeuda = deudas.reduce((s,c) => s+c.monto, 0);
 
   // Compras del mes: usar fechaPago o fecha como referencia del mes
@@ -5180,16 +5213,20 @@ function renderProveedores() {
     : deudas.map(c => {
       const prov = DB.proveedores.find(p => p.id === c.provId);
       const fechaPago = c.fechaPago || vencimiento(c.fecha, prov?.diasPago || 0);
-      const vencido = fechaPago && new Date(fechaPago) < new Date();
+      const diasPago = diasHastaFecha(fechaPago);
+      const vencido = diasPago !== null && diasPago < 0;
       return `<tr>
         <td style="font-weight:500">${prov?.nombre||'—'}</td>
         <td style="font-size:12px;font-family:var(--mono)">${c.fecha||'—'}</td>
-        <td style="font-size:12px;font-family:var(--mono);color:${vencido?'var(--danger)':'var(--text2)'}">${fechaPago||'Al contado'}</td>
+        <td style="font-size:12px;font-family:var(--mono);color:${vencido?'var(--danger)':'var(--text2)'}">
+          <div>${fechaPago||'Al contado'}</div>
+          <div style="margin-top:4px">${badgeVencimiento(diasPago)}</div>
+        </td>
         <td style="font-size:12px;color:var(--text3)">${formasPagoLbl[c.formaPago]||c.formaPago||'—'}</td>
         <td class="num">${fmtC(c.monto)}</td>
         <td style="font-size:12px;color:var(--text3)">${c.descuento||'—'}</td>
         <td class="num">${fmtC(c.aPagar||c.monto)}</td>
-        <td><span class="badge ${vencido?'badge-danger':'badge-warn'}">${vencido?'Vencido':'Pendiente'}</span></td>
+        <td>${badgeVencimiento(diasPago)}</td>
         <td><button class="btn btn-secondary btn-sm" onclick="pagarCompra('${c.id}')">Marcar pagado</button></td>
       </tr>`;
     }).join('');

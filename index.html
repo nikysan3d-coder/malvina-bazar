@@ -4364,6 +4364,26 @@ function montoVentaEnvio(e) {
   return Number(e.montoVenta ?? e.monto ?? e.montoCobrar ?? 0);
 }
 
+function normalizarTelefonoWhatsapp(raw) {
+  let n = String(raw || '').replace(/\D/g, '');
+  if (!n) return '';
+  if (n.startsWith('00')) n = n.slice(2);
+  if (n.startsWith('549')) return n;
+  if (n.startsWith('54')) {
+    const resto = n.slice(2);
+    if (resto.startsWith('9')) return n;
+    return '549' + resto;
+  }
+  if (n.startsWith('0')) n = n.slice(1);
+  if (n.length === 10 || n.length === 11) return '549' + n;
+  return n.length >= 8 ? '549' + n : '';
+}
+
+function whatsappUrlTelefono(raw) {
+  const tel = normalizarTelefonoWhatsapp(raw);
+  return tel ? `https://wa.me/${tel}` : '';
+}
+
 function estadoEnvioLabel(estado) {
   const labels = {
     pendiente: 'Pendiente',
@@ -4441,6 +4461,7 @@ function renderEnvios() {
           </td>
           <td>
             <div class="row-actions">
+              ${whatsappUrlTelefono(e.telefono) ? `<button class="action-btn" onclick="abrirWhatsappEnvio('${e.id}')">WhatsApp</button>` : ''}
               <button class="action-btn" onclick="editarEnvio('${e.id}')">Editar</button>
               ${!e.cargadoPDV ? `<button class="action-btn" onclick="marcarEnvioPDV('${e.id}')">PDV</button>` : ''}
               ${e.formaPago === 'efectivo' && e.cobradoPorJuan && !e.efectivoRendido ? `<button class="action-btn" onclick="marcarEnvioRendido('${e.id}')">Rendido</button>` : ''}
@@ -4564,6 +4585,16 @@ function findEnvio(id) {
 
 function findKmEnvio(id) {
   return (DB.kmJuan || []).find(k => k.id === id);
+}
+
+function abrirWhatsappEnvio(id) {
+  const e = findEnvio(id);
+  const url = whatsappUrlTelefono(e?.telefono);
+  if (!url) {
+    alert('Este envío no tiene un WhatsApp válido cargado.');
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
 }
 
 function editarEnvio(id) {
